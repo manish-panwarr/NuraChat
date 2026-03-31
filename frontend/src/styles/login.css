@@ -1,0 +1,107 @@
+
+.login-right {
+    width: 50%;
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  /* 1546px to 1090px */
+  @media screen and (max-width: 1546px) and (min-width: 1089px) {
+    .login-left {
+      width:55%;
+    }
+    .login-right {
+      width: 45%;
+    }
+  }
+  
+  /* Below 1090px */
+  @media screen and (max-width: 1089px) {
+    .login-left {
+      display: none;
+    }
+    .login-right {
+      width: 90%;
+      margin: 0 auto;
+    }
+  }
+  
+  @media screen and (max-width : 480px){
+      .login-right{
+          height: 90vh;
+          width: 100%;
+          margin: 0 auto;
+          padding: 0 auto;
+      }
+  
+      form{
+          width: 105%;
+      }
+  
+      .login-container {
+          width: 95%;
+      }
+  }
+  
+  @media screen and(max-width : 625px) {
+  
+       form{
+          width: 100%;
+      }
+        .login-container {
+          width: 90%;
+      }
+  }
+  
+  
+  @media screen and (max-width : 480px) {
+      .login-container {
+          width: 100%;
+      }
+      
+  }
+  
+  /* Remove up/down arrows in number input */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+  
+
+  .btn-primary {
+    width: 100%;
+    background: black;
+    color: white;
+    padding: 10px 0;
+    border-radius: 999px;
+    font-weight: 500;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  
+  .btn-primary:hover {
+    background: #1f2937;
+  }
+  
+  .btn-primary:active {
+    transform: scale(0.96);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+
+  input:focus {
+    outline: none;
+  }
+  
+  .border:focus-within {
+    border-color: black;
+    box-shadow: 0 0 0 1px black;
+    transition: all 0.2s ease;
+  }
+  
