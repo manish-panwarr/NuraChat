@@ -23,9 +23,7 @@ function LoginMain() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (submitting) return; // Prevent duplicate API calls
-
-    // Frontend validation
+    if (submitting) return;
     if (!email.trim() || !password.trim()) return;
 
     setSubmitting(true);
@@ -52,14 +50,14 @@ function LoginMain() {
         <SideImage img="/images/login/nurachat-features.png" />
       </div>
 
-      <div className="login-right relative">
-        <h2 className="text-3xl font-arial mb-4">Log in</h2>
+      <div className="login-right relative bg-white dark:bg-slate-800 flex flex-col justify-center px-10">
+        <h2 className="text-3xl font-arial mb-4 text-slate-800 dark:text-slate-100 font-bold">Log in</h2>
 
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm mb-6 text-slate-500 dark:text-slate-400">
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="text-black font-medium hover:underline"
+            className="auth-link font-medium hover:underline"
           >
             Create an Account
           </Link>
@@ -67,10 +65,10 @@ function LoginMain() {
 
         <form className="w-[90%]" onSubmit={handleSubmit}>
           {/* EMAIL */}
-          <div className="border border-gray-300 rounded-full relative p-2 mb-5 w-full">
+          <div className="rounded-full relative p-2 mb-5 w-full border border-slate-200 dark:border-slate-700 focus-within:border-teal-500 dark:focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500 transition-all bg-transparent">
             <label
               htmlFor="email"
-              className="absolute text-sm top-[-10px] left-5 bg-white px-2"
+              className="absolute text-sm top-[-10px] left-5 px-2 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium"
             >
               Email Address
             </label>
@@ -80,16 +78,16 @@ function LoginMain() {
               placeholder="johndoe@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
+              className="w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
               required
             />
           </div>
 
           {/* PASSWORD */}
-          <div className="border border-gray-300 rounded-full relative p-2 w-full mb-4">
+          <div className="rounded-full relative p-2 mb-4 w-full border border-slate-200 dark:border-slate-700 focus-within:border-teal-500 dark:focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500 transition-all bg-transparent">
             <label
               htmlFor="password"
-              className="absolute text-sm top-[-10px] left-5 bg-white px-2"
+              className="absolute text-sm top-[-10px] left-5 px-2 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium"
             >
               Password
             </label>
@@ -100,11 +98,11 @@ function LoginMain() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
+                className="w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
                 required
               />
               <span
-                className="absolute right-4 top-2 cursor-pointer text-gray-500"
+                className="absolute right-4 top-2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -115,7 +113,7 @@ function LoginMain() {
           <div className="flex justify-end text-sm mb-6">
             <Link
               to="/login/forgot"
-              className="text-gray-500 hover:text-black"
+              className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
             >
               Forgot Password?
             </Link>
@@ -124,19 +122,19 @@ function LoginMain() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-black text-white py-2 rounded-full font-medium hover:bg-gray-800 mb-4 mt-10 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="w-full bg-teal-500 hover:bg-teal-600 active:scale-95 text-white py-3 rounded-full font-semibold transition-all shadow-sm mt-8 mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? "Logging in..." : "Log in"}
           </button>
         </form>
 
-        <div className="text-center text-gray-400 mb-6">or</div>
+        <div className="text-center text-slate-400 dark:text-slate-500 text-sm mb-6">or</div>
 
         {/* OAUTH BUTTONS */}
         <div className="flex justify-center gap-4 flex-wrap">
           <a
             href={`${OAUTH_URL}/google`}
-            className="flex items-center gap-2 border border-gray-300 rounded-full px-6 py-2 hover:bg-gray-100 transition"
+            className="flex items-center gap-2 border border-slate-200 dark:border-slate-700 rounded-full px-6 py-2.5 bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer text-sm font-medium"
           >
             <FaGoogle className="text-red-400 text-lg" />
             <span className="text-xs">Continue with Google</span>
@@ -144,9 +142,9 @@ function LoginMain() {
 
           <a
             href={`${OAUTH_URL}/github`}
-            className="flex items-center gap-2 border border-gray-300 rounded-full px-6 py-2 hover:bg-gray-100 transition"
+            className="flex items-center gap-2 border border-slate-200 dark:border-slate-700 rounded-full px-6 py-2.5 bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer text-sm font-medium"
           >
-            <FaGithub className="text-black-500 text-lg" />
+            <FaGithub className="text-lg" />
             <span className="text-xs">Continue with Github</span>
           </a>
         </div>

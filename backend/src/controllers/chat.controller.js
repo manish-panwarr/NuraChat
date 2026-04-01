@@ -1,6 +1,10 @@
 import Chat from "../models/chat.model.js";
-import Message from "../models/message.model.js";
-import mongoose from "mongoose";
+import {
+  findOrCreateChat,
+  getUserChats,
+  deleteChatWithCleanup,
+  deleteChatForMe,
+} from "../services/chat.service.js";
 
 /**
  * CREATE CHAT (1-to-1)
@@ -15,49 +19,22 @@ export const createChat = async (req, res) => {
     return res.status(400).json({ message: "participantId is required" });
   }
 
-  if (participantId === currentUserId.toString()) {
-    return res.status(400).json({ message: "Cannot create chat with yourself" });
-  }
-
-  let participantObjectId;
   try {
-      participantObjectId = new mongoose.Types.ObjectId(participantId);
-  } catch(e) {
-      return res.status(400).json({ message: "Invalid participantId format" });
+    const { chat, created } = await findOrCreateChat(currentUserId, participantId);
+    res.status(created ? 201 : 200).json(chat);
+  } catch (err) {
+    if (err.message.includes("yourself") || err.message.includes("Invalid")) {
+      return res.status(400).json({ message: err.message });
+    }
+    throw err;
   }
-
-  const participants = [currentUserId, participantObjectId];
-
-  // Check if chat already exists between these two users
-  const existing = await Chat.findOne({
-    participants: { $all: participants, $size: 2 },
-  })
-    .populate("participants", "firstName lastName email profileImage isOnline lastSeen statusText")
-    .populate("lastMessageId");
-
-  if (existing) return res.json(existing);
-
-  const chat = await Chat.create({ participants });
-
-  // Return populated version
-  const populated = await Chat.findById(chat._id)
-    .populate("participants", "firstName lastName email profileImage isOnline lastSeen statusText")
-    .populate("lastMessageId");
-
-  res.status(201).json(populated);
 };
 
 /**
  * GET ALL CHATS for the authenticated user
  */
-export const getUserChats = async (req, res) => {
-  const userId = req.user._id;
-
-  const chats = await Chat.find({ participants: userId })
-    .populate("participants", "firstName lastName email profileImage isOnline lastSeen statusText")
-    .populate("lastMessageId")
-    .sort({ updatedAt: -1 });
-
+export const getUserChatsController = async (req, res) => {
+  const chats = await getUserChats(req.user._id);
   res.json(chats);
 };
 
@@ -83,23 +60,29 @@ export const getChatById = async (req, res) => {
 };
 
 /**
- * DELETE CHAT (and all its messages)
+ * DELETE CHAT
+ * Query param: ?deleteType=me|everyone
+ * "me" — hides messages for this user only
+ * "everyone" — deletes chat + messages + media permanently
  */
 export const deleteChat = async (req, res) => {
-  const chat = await Chat.findById(req.params.id);
-  if (!chat) return res.status(404).json({ message: "Chat not found" });
+  try {
+    const deleteType = req.query.deleteType || "everyone";
 
-  // Verify the requesting user is a participant
-  const isParticipant = chat.participants.some(
-    (p) => p.toString() === req.user._id.toString()
-  );
-  if (!isParticipant) {
-    return res.status(403).json({ message: "Access denied" });
+    if (deleteType === "me") {
+      const result = await deleteChatForMe(req.params.id, req.user._id);
+      return res.json({ message: "Chat cleared for you", ...result });
+    }
+
+    const result = await deleteChatWithCleanup(req.params.id, req.user._id);
+    res.json({ message: "Chat deleted successfully", ...result });
+  } catch (err) {
+    if (err.message === "Chat not found") {
+      return res.status(404).json({ message: err.message });
+    }
+    if (err.message === "Access denied") {
+      return res.status(403).json({ message: err.message });
+    }
+    throw err;
   }
-
-  // Delete all messages in this chat
-  await Message.deleteMany({ chatId: chat._id });
-  await Chat.findByIdAndDelete(req.params.id);
-
-  res.json({ message: "Chat deleted successfully" });
 };

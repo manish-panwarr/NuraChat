@@ -31,7 +31,6 @@ function SetPass() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (submitting) return;
 
         if (password !== confirmPassword) {
@@ -72,20 +71,21 @@ function SetPass() {
             <div className="login-right relative">
                 <Link
                     to="/home"
-                    className="absolute top-20 left-5 text-gray-600 hover:text-black transition"
+                    className="absolute top-20 left-5 transition"
+                    style={{ color: 'var(--text-color)' }}
                 >
                     <FaArrowLeft size={20} />
                 </Link>
 
-                <h2 className="text-3xl mb-3 mt-12">Set Password</h2>
-                <p className="text-sm text-gray-600 mb-6">
+                <h2 className="text-3xl mb-3 mt-12" style={{ color: 'var(--text-color)' }}>Set Password</h2>
+                <p className="text-sm mb-6" style={{ color: '#9ca3af' }}>
                     Create a strong password for your account.
                 </p>
 
                 <form onSubmit={handleSubmit} className="w-[85%] max-w-md">
                     {/* Password */}
-                    <div className="border border-gray-300 rounded-full relative p-2 w-full mb-6">
-                        <label className="absolute text-xs -top-2 left-5 bg-white px-2 font-medium">
+                    <div className="auth-border rounded-full relative p-2 w-full mb-6" style={{ borderWidth: '1px', borderStyle: 'solid' }}>
+                        <label className="auth-label absolute text-xs -top-2 left-5 px-2 font-medium">
                             Password
                         </label>
                         <div className="relative">
@@ -93,12 +93,13 @@ function SetPass() {
                                 type={showPassword ? "text" : "password"}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-5 text-[15px] pr-10 py-1 border-none rounded-full focus:outline-none bg-transparent"
+                                className="auth-input w-full pl-5 text-[15px] pr-10 py-1 border-none rounded-full focus:outline-none"
                                 required
                                 placeholder="Enter your password"
                             />
                             <span
-                                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
+                                style={{ color: '#9ca3af' }}
                                 onClick={() => setShowPassword(!showPassword)}
                             >
                                 {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -107,8 +108,8 @@ function SetPass() {
                     </div>
 
                     {/* Confirm Password */}
-                    <div className="border border-gray-300 rounded-full relative p-2 w-full mb-6">
-                        <label className="absolute text-xs -top-2 left-5 bg-white px-2 font-medium">
+                    <div className="auth-border rounded-full relative p-2 w-full mb-6" style={{ borderWidth: '1px', borderStyle: 'solid' }}>
+                        <label className="auth-label absolute text-xs -top-2 left-5 px-2 font-medium">
                             Confirm Password
                         </label>
                         <div className="relative">
@@ -116,15 +117,14 @@ function SetPass() {
                                 type={showConfirmPassword ? "text" : "password"}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full pl-5 text-[15px] pr-10 py-1 border-none rounded-full focus:outline-none bg-transparent"
+                                className="auth-input w-full pl-5 text-[15px] pr-10 py-1 border-none rounded-full focus:outline-none"
                                 required
                                 placeholder="Confirm your password"
                             />
                             <span
-                                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600"
-                                onClick={() =>
-                                    setShowConfirmPassword(!showConfirmPassword)
-                                }
+                                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
+                                style={{ color: '#9ca3af' }}
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             >
                                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                             </span>
@@ -134,7 +134,7 @@ function SetPass() {
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="w-full bg-black text-white font-medium rounded-full px-6 py-2.5 hover:bg-gray-800 disabled:opacity-50 transition"
+                        className="auth-btn-primary"
                     >
                         {submitting ? "Setting Password..." : "Set Password"}
                     </button>

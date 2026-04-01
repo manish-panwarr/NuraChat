@@ -3,7 +3,6 @@ import upload from "../middlewares/upload.middleware.js";
 import {
   sendGroupMessage,
   getGroupMessages,
-  updateGroupMessage,
   deleteGroupMessage,
   sendGroupMediaMessage,
 } from "../controllers/groupMessage.controller.js";
@@ -17,7 +16,6 @@ router.use(authenticate);
 router.post("/", sendGroupMessage);
 router.post("/media", upload.single("file"), sendGroupMediaMessage);
 router.get("/:groupId", getGroupMessages);
-router.put("/:id", updateGroupMessage);
 router.delete("/:id", deleteGroupMessage);
 
 export default router;

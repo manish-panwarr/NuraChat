@@ -78,6 +78,29 @@ export const getAllUsers = async (req, res) => {
 };
 
 /* ===========================
+   GET RANDOM USERS (DISCOVERY)
+=========================== */
+export const getRandomUsers = async (req, res) => {
+  try {
+    const count = parseInt(req.query.count) || 7;
+    
+    // Aggregation pipeline to get random users excluding current user
+    const users = await User.aggregate([
+      { $match: { _id: { $ne: req.user._id } } },
+      { $sample: { size: count } },
+      { $project: { passwordHash: 0, authProvider: 0, providerId: 0 } } // Exclude sensitive fields
+    ]);
+    
+    res.json({ users });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch random users",
+      error: error.message,
+    });
+  }
+};
+
+/* ===========================
    GET CURRENT LOGGED-IN USER
    (USED BY /api/users/me)
 =========================== */
@@ -251,10 +274,22 @@ export const uploadAvatar = async (req, res) => {
       return res.status(400).json({ message: "No image file provided" });
     }
 
-    // Upload to Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-      folder: "nurachat/profiles",
-      resource_type: "image",
+    // Upload buffer to Cloudinary (memoryStorage — no req.file.path)
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "nurachat/profiles",
+          resource_type: "image",
+          transformation: [
+            { width: 400, height: 400, crop: "fill", gravity: "face" },
+          ],
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
     });
 
     const user = await User.findByIdAndUpdate(

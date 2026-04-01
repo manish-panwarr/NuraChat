@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema(
     },
     profileImage: {
       type: String,   // profile picture ka URL
-      default: null
+      default: ""
     },
 
     statusText: {

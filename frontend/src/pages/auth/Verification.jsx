@@ -7,8 +7,8 @@ import SideImage from "./SideImage";
 import "../../styles/login.css";
 
 const DIGITS = 6;
-const RESEND_COOLDOWN = 60; // seconds
-const OTP_EXPIRY = 300; // 5 minutes in seconds
+const RESEND_COOLDOWN = 60;
+const OTP_EXPIRY = 300;
 
 function Verification() {
   const location = useLocation();
@@ -27,7 +27,6 @@ function Verification() {
   const [otpExpiry, setOtpExpiry] = useState(OTP_EXPIRY);
   const [resending, setResending] = useState(false);
 
-  // Redirect if no email
   useEffect(() => {
     if (!email) {
       toast.error("No email found. Please register again.");
@@ -35,7 +34,6 @@ function Verification() {
     }
   }, [email, navigate]);
 
-  // Resend cooldown timer
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setInterval(() => {
@@ -44,7 +42,6 @@ function Verification() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  // OTP expiry timer
   useEffect(() => {
     if (otpExpiry <= 0) return;
     const timer = setInterval(() => {
@@ -58,7 +55,6 @@ function Verification() {
     const newCode = [...code];
     newCode[i] = value;
     setCode(newCode);
-
     if (value && i < DIGITS - 1) {
       inputsRef.current[i + 1]?.focus();
     }
@@ -82,24 +78,19 @@ function Verification() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const otp = code.join("");
-
     if (otp.length !== DIGITS) {
       toast.error("Enter full OTP");
       return;
     }
-
     if (otpExpiry <= 0) {
       toast.error("OTP has expired. Please request a new one.");
       return;
     }
-
     setVerifying(true);
     try {
-      const res = await verifyOtp(email, otp, mode);
-
+      await verifyOtp(email, otp, mode);
       localStorage.removeItem("pendingEmail");
       localStorage.removeItem("otpMode");
-
       if (mode === "register") {
         navigate("/home");
       } else {
@@ -108,7 +99,6 @@ function Verification() {
         });
       }
     } catch {
-      // Error handled by useAuth hook
       setCode(Array(DIGITS).fill(""));
       inputsRef.current[0]?.focus();
     } finally {
@@ -118,7 +108,6 @@ function Verification() {
 
   const handleResend = useCallback(async () => {
     if (resendCooldown > 0 || resending) return;
-
     setResending(true);
     try {
       await authService.resendOtp({ email, type: mode });
@@ -147,14 +136,13 @@ function Verification() {
       </div>
 
       <div className="login-right">
-        <h2 className="text-3xl mb-3">Verification Code</h2>
-        <p className="text-sm mb-2">
+        <h2 className="text-3xl mb-3" style={{ color: 'var(--text-color)' }}>Verification Code</h2>
+        <p className="text-sm mb-2" style={{ color: 'var(--text-color)' }}>
           A 6-digit code was sent to <b>{email}</b>
         </p>
 
-        {/* OTP Expiry Warning */}
         {otpExpiry > 0 ? (
-          <p className={`text-xs mb-6 ${otpExpiry < 60 ? "text-red-500" : "text-gray-400"}`}>
+          <p className={`text-xs mb-6 ${otpExpiry < 60 ? "text-red-500" : ""}`} style={otpExpiry >= 60 ? { color: '#9ca3af' } : {}}>
             Code expires in {formatTime(otpExpiry)}
           </p>
         ) : (
@@ -173,10 +161,7 @@ function Verification() {
                 value={c}
                 onChange={(e) => handleChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
-                className={`w-[55px] h-[55px] text-center text-2xl rounded-full border transition-colors ${c
-                    ? "border-black bg-gray-50"
-                    : "border-gray-300"
-                  } focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200`}
+                className={`auth-otp-input w-[55px] h-[55px] text-center text-2xl rounded-full ${c ? 'filled' : ''}`}
                 autoFocus={i === 0}
               />
             ))}
@@ -185,23 +170,23 @@ function Verification() {
           <button
             type="submit"
             disabled={verifying || otpExpiry <= 0}
-            className="w-full rounded-full px-6 py-2 border hover:bg-black hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="auth-btn-primary"
           >
             {verifying ? "Verifying..." : "Verify"}
           </button>
         </form>
 
-        {/* Resend Button */}
         <div className="mt-4 text-center">
           {resendCooldown > 0 ? (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm" style={{ color: '#9ca3af' }}>
               Resend OTP in {formatTime(resendCooldown)}
             </p>
           ) : (
             <button
               onClick={handleResend}
               disabled={resending}
-              className="text-sm text-indigo-600 font-medium hover:underline disabled:opacity-50"
+              className="text-sm font-medium hover:underline disabled:opacity-50"
+              style={{ color: '#14b8a6' }}
             >
               {resending ? "Sending..." : "Resend OTP"}
             </button>

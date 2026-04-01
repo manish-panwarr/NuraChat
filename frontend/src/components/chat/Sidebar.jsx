@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Search, Pin, Edit2, MessageCirclePlus } from "lucide-react";
+import { Search, Pin, MessageCirclePlus, RefreshCw } from "lucide-react";
 import Avatar from "../common/Avatar";
 import SkeletonLoader from "../common/SkeletonLoader";
 import useChat from "../../hooks/useChat";
@@ -16,6 +16,9 @@ const Sidebar = () => {
     const pinnedChats = useChatStore((s) => s.pinnedChats);
     const togglePin = useChatStore((s) => s.togglePin);
     const setMobileChatOpen = useUiStore((s) => s.setMobileChatOpen);
+    const setShowProfilePanel = useUiStore((s) => s.setShowProfilePanel);
+    const sidebarTab = useUiStore((s) => s.sidebarTab);
+    const setSidebarTab = useUiStore((s) => s.setSidebarTab);
 
     const {
         chats,
@@ -30,18 +33,59 @@ const Sidebar = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [debounceTimer, setDebounceTimer] = useState(null);
-    const [suggestedUsers, setSuggestedUsers] = useState([]);
+    const [discoveryUsers, setDiscoveryUsers] = useState([]);
+    const [isDiscoveryMode, setIsDiscoveryMode] = useState(false);
+    const [isDiscoveryLoading, setIsDiscoveryLoading] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
 
     useEffect(() => {
         loadChats();
-        // Load initial users for the "New chat" discovery
-        userService.fetchAllUsers().then((users) => {
-            if (Array.isArray(users)) {
-                setSuggestedUsers(users.filter(u => u._id !== user?._id));
+    }, [loadChats]);
+
+    // Quick access — ONLY users who are online AND have an existing chat
+    const onlineChattedUsers = useMemo(() => {
+        return chats
+            .map(chat => chat.participants?.find(p => p._id !== user?._id))
+            .filter(other => other && other.isOnline)
+            .slice(0, 8);
+    }, [chats, user?._id]);
+
+    const fetchDiscoveryUsers = async () => {
+        setIsDiscoveryLoading(true);
+        try {
+            const randomUsers = await userService.fetchRandomUsers(7);
+            
+            // Filter out users we already have a chat with to maximize discovery
+            const existingChatUserIds = new Set(
+                chats.map(c => c.participants?.find(p => p._id !== user?._id)?._id).filter(Boolean)
+            );
+            
+            let filtered = randomUsers.filter(u => !existingChatUserIds.has(u._id));
+            if (filtered.length < 3 && randomUsers.length > 0) {
+                // If filtering removed almost everyone, just show the random users anyway
+                filtered = randomUsers;
             }
-        }).catch(console.error);
-    }, [loadChats, user?._id]);
+            
+            setDiscoveryUsers(filtered);
+        } catch (err) {
+            console.error("Failed to fetch discovery users", err);
+        } finally {
+            setIsDiscoveryLoading(false);
+        }
+    };
+
+    // When "New Chat" is clicked, fetch random users
+    const handleNewChat = useCallback(() => {
+        setIsDiscoveryMode(true);
+        setSearchQuery("");
+        setSearchResults([]);
+        fetchDiscoveryUsers();
+    }, [chats, user?._id]);
+
+    // Refresh discovery users
+    const handleRefreshDiscovery = () => {
+        fetchDiscoveryUsers();
+    };
 
     // Debounced search
     const handleSearch = useCallback(
@@ -55,11 +99,13 @@ const Sidebar = () => {
                 return;
             }
 
+            // Exit discovery mode when searching
+            setIsDiscoveryMode(false);
+
             setIsSearching(true);
             const timer = setTimeout(async () => {
                 try {
                     const results = await searchUsers(query);
-                    // searchUsers already handles { users } unwrapping
                     const filtered = Array.isArray(results)
                         ? results.filter((u) => u._id !== user?._id)
                         : [];
@@ -113,11 +159,12 @@ const Sidebar = () => {
             const chat = await createChat(targetUser._id);
             setSearchQuery("");
             setSearchResults([]);
+            setIsDiscoveryMode(false);
             await loadChats();
             selectChat(chat);
             setMobileChatOpen(true);
+            setShowProfilePanel(true);
         } catch (err) {
-            // Check if an existing chat was found locally in case of weird errors
             const existing = chats.find((c) =>
                 c.participants?.some((p) => p._id === targetUser._id)
             );
@@ -125,7 +172,9 @@ const Sidebar = () => {
                 selectChat(existing);
                 setSearchQuery("");
                 setSearchResults([]);
+                setIsDiscoveryMode(false);
                 setMobileChatOpen(true);
+                setShowProfilePanel(true);
             } else {
                 toast.error(err.response?.data?.message || "Failed to start chat");
             }
@@ -135,37 +184,68 @@ const Sidebar = () => {
     const handleSelectChat = (chat) => {
         selectChat(chat);
         setMobileChatOpen(true);
+        setShowProfilePanel(true);
+        setIsDiscoveryMode(false);
     };
+
+    if (sidebarTab === "group") {
+        return null; // Will be handled by a higher logic component
+    }
 
     return (
         <div className="flex flex-col h-full" style={{ background: 'var(--panel-bg)' }}>
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-3">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 tracking-tight font-display">Messages</h2>
-                <button 
-                    onClick={() => {
-                        const input = document.querySelector('input[placeholder="Search users or messages"]');
-                        if (input) {
-                            input.focus();
-                            setIsSearchFocused(true);
-                        }
-                    }}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="New chat">
-                    <MessageCirclePlus size={15} />
-                </button>
+            {/* Header & Tabs */}
+            <div className="flex flex-col px-5 pt-5 pb-3 gap-3">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 tracking-tight font-display">Messages</h2>
+                    <button
+                        onClick={handleNewChat}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-500 transition-colors" title="New chat"
+                    >
+                        <MessageCirclePlus size={15} />
+                    </button>
+                </div>
+
+                <div className="flex bg-gray-100 dark:bg-gray-800/80 p-0.5 rounded-lg w-full">
+                    <button
+                        onClick={() => setSidebarTab("private")}
+                        className={`flex-1 flex justify-center py-1.5 text-[12px] font-medium rounded-md transition-all ${
+                            sidebarTab === "private"
+                                ? "bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-400 shadow-sm"
+                                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                        }`}
+                    >
+                        Private
+                    </button>
+                    <button
+                        onClick={() => setSidebarTab("group")}
+                        className={`flex-1 flex justify-center py-1.5 text-[12px] font-medium rounded-md transition-all ${
+                            sidebarTab === "group"
+                                ? "bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-400 shadow-sm"
+                                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                        }`}
+                    >
+                        Groups
+                    </button>
+                </div>
             </div>
 
-            {/* Quick Access Avatars */}
-            {chats.length > 0 && (
+            {/* Quick Access — Online & Chatted Users Only */}
+            {onlineChattedUsers.length > 0 && !isDiscoveryMode && (
                 <div className="px-5 flex gap-2.5 overflow-x-auto custom-scrollbar pb-2 mb-1">
-                    {chats.slice(0, 6).map(chat => {
-                        const other = chat.participants?.find((p) => p._id !== user?._id) || {};
-                        return (
-                            <div key={chat._id} className="relative cursor-pointer shrink-0 group" onClick={() => handleSelectChat(chat)}>
-                                <Avatar src={other.profileImage} name={(other.firstName || "") + " " + (other.lastName || "")} size="sm" isOnline={other.isOnline} />
-                            </div>
-                        );
-                    })}
+                    {onlineChattedUsers.map(other => (
+                        <div
+                            key={other._id}
+                            className="relative cursor-pointer shrink-0 group"
+                            onClick={() => {
+                                const chat = chats.find(c => c.participants?.some(p => p._id === other._id));
+                                if (chat) handleSelectChat(chat);
+                            }}
+                            title={`${other.firstName} ${other.lastName || ""}`}
+                        >
+                            <Avatar src={other.profileImage} name={(other.firstName || "") + " " + (other.lastName || "")} size="md" isOnline={true} />
+                        </div>
+                    ))}
                 </div>
             )}
 
@@ -185,11 +265,47 @@ const Sidebar = () => {
                     {isSearching && (
                         <div className="w-4 h-4 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin shrink-0" />
                     )}
+                    {isDiscoveryMode && !searchQuery && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setIsDiscoveryMode(false); }}
+                            className="text-[11px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shrink-0 ml-1"
+                        >
+                            ✕
+                        </button>
+                    )}
                 </div>
             </div>
 
             {/* Chat Lists Area */}
             <div className="flex-1 overflow-y-auto custom-scrollbar px-3 pt-1 pb-3 space-y-3">
+
+                {/* Discovery Mode — Random Users */}
+                {isDiscoveryMode && !searchQuery && discoveryUsers.length > 0 && (
+                    <div className="space-y-0.5 animate-fade-in-up">
+                        <div className="px-2 flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Discover People</span>
+                                <span className="bg-teal-50 dark:bg-teal-900/30 text-teal-500 text-[10px] w-4.5 h-4.5 flex items-center justify-center rounded-full font-bold">{discoveryUsers.length}</span>
+                            </div>
+                            <button
+                                onClick={handleRefreshDiscovery}
+                                className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-teal-500 transition-colors"
+                                title="Show different users"
+                            >
+                                <RefreshCw size={12} />
+                            </button>
+                        </div>
+                        {isDiscoveryLoading ? (
+                            <div className="flex justify-center py-4">
+                                <div className="w-4 h-4 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin shrink-0" />
+                            </div>
+                        ) : (
+                            discoveryUsers.map((u) => (
+                                <SearchResultItem key={u._id} user={u} onStart={() => handleStartChat(u)} />
+                            ))
+                        )}
+                    </div>
+                )}
 
                 {/* Search Results */}
                 {searchQuery && searchResults.length > 0 && (
@@ -203,18 +319,6 @@ const Sidebar = () => {
                     </div>
                 )}
 
-                {/* Suggested Users / Discover */}
-                {!searchQuery && isSearchFocused && suggestedUsers.length > 0 && (
-                    <div className="space-y-0.5 animate-fade-in-up">
-                        <div className="px-2 flex items-center gap-2 mb-1.5">
-                            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Suggested Users</span>
-                        </div>
-                        {suggestedUsers.map((u) => (
-                            <SearchResultItem key={u._id} user={u} onStart={() => handleStartChat(u)} />
-                        ))}
-                    </div>
-                )}
-
                 {searchQuery && searchResults.length === 0 && !isSearching && (
                     <div className="flex flex-col items-center justify-center py-10 text-gray-400">
                         <Search size={28} strokeWidth={1.3} className="mb-2 opacity-40" />
@@ -223,7 +327,7 @@ const Sidebar = () => {
                 )}
 
                 {/* Pinned Group */}
-                {!searchQuery && pinnedChatsList.length > 0 && (
+                {!searchQuery && !isDiscoveryMode && pinnedChatsList.length > 0 && (
                     <div className="space-y-0.5">
                         <div className="px-2 flex items-center gap-2 mb-1.5">
                             <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Pinned</span>
@@ -245,7 +349,7 @@ const Sidebar = () => {
                 )}
 
                 {/* All Messages */}
-                {!searchQuery && (onlineChats.length > 0 || offlineChats.length > 0) && (
+                {!searchQuery && !isDiscoveryMode && (onlineChats.length > 0 || offlineChats.length > 0) && (
                     <div className="space-y-0.5">
                         <div className="px-2 flex items-center gap-2 mb-1.5">
                             <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">All Messages</span>
@@ -280,7 +384,7 @@ const Sidebar = () => {
                 )}
 
                 {/* Empty States */}
-                {!searchQuery && !isSearchFocused && !chatLoading && chats.length === 0 && (
+                {!searchQuery && !isDiscoveryMode && !chatLoading && chats.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-14 text-gray-400">
                         <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-3">
                             <MessageCirclePlus size={24} strokeWidth={1.3} className="text-teal-400" />
@@ -365,11 +469,10 @@ const ChatItem = ({ chat, currentUserId, isSelected, unreadCount, onSelect, isPi
 
     return (
         <div
-            className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 group relative cursor-pointer ${
-                isSelected
-                    ? "bg-gray-100 dark:bg-gray-800/70"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800/30"
-            }`}
+            className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 group relative cursor-pointer ${isSelected
+                ? "bg-gray-100 dark:bg-gray-800/70"
+                : "hover:bg-gray-50 dark:hover:bg-gray-800/30"
+                }`}
             onClick={onSelect}
         >
             <Avatar
@@ -380,17 +483,15 @@ const ChatItem = ({ chat, currentUserId, isSelected, unreadCount, onSelect, isPi
             />
             <div className="flex-1 min-w-0 pr-5">
                 <div className="flex justify-between items-center mb-0.5">
-                    <h4 className={`font-semibold text-[13px] truncate ${
-                        isSelected ? "text-gray-900 dark:text-gray-100" : "text-gray-700 dark:text-gray-200"
-                    }`}>
+                    <h4 className={`font-semibold text-[13px] truncate ${isSelected ? "text-gray-900 dark:text-gray-100" : "text-gray-700 dark:text-gray-200"
+                        }`}>
                         {other.firstName} {other.lastName}
                     </h4>
                 </div>
-                <p className={`text-[12px] truncate ${
-                    unreadCount > 0
-                        ? "text-gray-800 dark:text-gray-200 font-medium"
-                        : "text-gray-400 dark:text-gray-500"
-                }`}>
+                <p className={`text-[12px] truncate ${unreadCount > 0
+                    ? "text-gray-800 dark:text-gray-200 font-medium"
+                    : "text-gray-400 dark:text-gray-500"
+                    }`}>
                     {previewText.length > 30 ? previewText.substring(0, 30) + '...' : previewText}
                 </p>
             </div>

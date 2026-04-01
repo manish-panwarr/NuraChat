@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import User from "../models/user.model.js";
+import Message from "../models/message.model.js";
 
 let io;
 const userSocketMap = new Map(); // userId -> socketId
@@ -28,7 +29,12 @@ export const initSocket = (server) => {
                     lastSeen: new Date(),
                 });
             } catch { }
+
             io.emit("user-status", { userId, isOnline: true });
+
+            // Send the full list of online users to the newly connected user
+            const onlineUserIds = Array.from(userSocketMap.keys());
+            socket.emit("online-users-list", onlineUserIds);
         }
 
         // --- Send Message (emit to receiver) ---
@@ -88,6 +94,55 @@ export const initSocket = (server) => {
                 socket
                     .to(targetSocketId)
                     .emit("message-status-update", { messageId, status: "read" });
+            }
+        });
+
+        // --- Batch Read: Mark all messages in a chat as read ---
+        socket.on("message-read-batch", async ({ chatId, readerId }) => {
+            try {
+                // Update all unread messages from the other user to "read"
+                const result = await Message.updateMany(
+                    {
+                        chatId,
+                        senderId: { $ne: readerId },
+                        status: { $ne: "read" },
+                    },
+                    { $set: { status: "read" } }
+                );
+
+                if (result.modifiedCount > 0) {
+                    // Find the sender to notify them
+                    const messages = await Message.find({ chatId, senderId: { $ne: readerId } })
+                        .select("senderId")
+                        .lean();
+
+                    const senderIds = [...new Set(messages.map((m) => m.senderId.toString()))];
+
+                    for (const senderId of senderIds) {
+                        const senderSocketId = userSocketMap.get(senderId);
+                        if (senderSocketId) {
+                            socket.to(senderSocketId).emit("messages-read-batch", {
+                                chatId,
+                                readBy: readerId,
+                            });
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Batch read error:", err);
+            }
+        });
+
+        // --- Notification: Emit when receiver is online but in different chat ---
+        socket.on("send-notification", ({ to, from, message, chatId }) => {
+            const targetSocketId = userSocketMap.get(to);
+            if (targetSocketId) {
+                socket.to(targetSocketId).emit("notification", {
+                    from,
+                    message,
+                    chatId,
+                    timestamp: new Date().toISOString(),
+                });
             }
         });
 

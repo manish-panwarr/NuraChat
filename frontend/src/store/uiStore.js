@@ -6,7 +6,7 @@ const useUiStore = create(
         (set) => ({
             theme: "light",
             sidebarTab: "private", // 'public' | 'private'
-            showProfilePanel: false,
+            showProfilePanel: true,
             isMobileMenuOpen: false,
             isMobileChatOpen: false,
 

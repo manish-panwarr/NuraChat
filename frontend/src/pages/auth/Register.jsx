@@ -62,14 +62,14 @@ function RegisterMain() {
 
       <div className="login-right relative">
         <div className="absolute top-20 left-5">
-          <Link to="/login">
+          <Link to="/login" style={{ color: 'var(--text-color)' }}>
             <FaArrowLeft size={20} />
           </Link>
         </div>
 
-        <p className="text-sm text-gray-500 mb-5 mt-18 ml-5">
+        <p className="text-sm mb-5 mt-18 ml-5" style={{ color: '#9ca3af' }}>
           Already have an account?{" "}
-          <Link to="/login" className="text-black font-medium">
+          <Link to="/login" className="auth-link font-medium">
             Log in
           </Link>
         </p>
@@ -77,8 +77,8 @@ function RegisterMain() {
         <form className="w-[90%]" onSubmit={handleSubmit}>
           <div className="flex flex-col md:flex-row gap-4 mb-5">
             <div className="w-full">
-              <div className="border border-gray-300 rounded-full relative p-2">
-                <label htmlFor="firstName" className="absolute text-sm top-[-10px] left-5 bg-white px-2">
+              <div className="auth-border rounded-full relative p-2" style={{ borderWidth: '1px', borderStyle: 'solid' }}>
+                <label htmlFor="firstName" className="auth-label absolute text-sm top-[-10px] left-5 px-2">
                   First Name
                 </label>
                 <input
@@ -87,15 +87,15 @@ function RegisterMain() {
                   placeholder="John"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
+                  className="auth-input w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
                   required
                 />
               </div>
               {errors.firstName && <p className="text-red-500 text-xs mt-1 ml-4">{errors.firstName}</p>}
             </div>
             <div className="w-full">
-              <div className="border border-gray-300 rounded-full relative p-2">
-                <label htmlFor="lastName" className="absolute text-sm top-[-10px] left-5 bg-white px-2">
+              <div className="auth-border rounded-full relative p-2" style={{ borderWidth: '1px', borderStyle: 'solid' }}>
+                <label htmlFor="lastName" className="auth-label absolute text-sm top-[-10px] left-5 px-2">
                   Last Name
                 </label>
                 <input
@@ -104,7 +104,7 @@ function RegisterMain() {
                   placeholder="Doe"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
+                  className="auth-input w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
                   required
                 />
               </div>
@@ -113,8 +113,8 @@ function RegisterMain() {
           </div>
 
           <div className="mb-5">
-            <div className="border border-gray-300 rounded-full relative p-2 w-full">
-              <label htmlFor="email" className="absolute text-sm top-[-10px] left-5 bg-white px-2">
+            <div className="auth-border rounded-full relative p-2 w-full" style={{ borderWidth: '1px', borderStyle: 'solid' }}>
+              <label htmlFor="email" className="auth-label absolute text-sm top-[-10px] left-5 px-2">
                 Email Address
               </label>
               <input
@@ -123,7 +123,7 @@ function RegisterMain() {
                 placeholder="johndoe@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
+                className="auth-input w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
                 required
               />
             </div>
@@ -131,8 +131,8 @@ function RegisterMain() {
           </div>
 
           <div className="mb-4">
-            <div className="border border-gray-300 rounded-full relative p-2 w-full">
-              <label htmlFor="password" className="absolute text-sm top-[-10px] left-5 bg-white px-2">
+            <div className="auth-border rounded-full relative p-2 w-full" style={{ borderWidth: '1px', borderStyle: 'solid' }}>
+              <label htmlFor="password" className="auth-label absolute text-sm top-[-10px] left-5 px-2">
                 Password
               </label>
               <div className="relative">
@@ -142,11 +142,12 @@ function RegisterMain() {
                   placeholder="Min 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
+                  className="auth-input w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
                   required
                 />
                 <div
-                  className="absolute right-4 top-2 cursor-pointer text-gray-500"
+                  className="absolute right-4 top-2 cursor-pointer"
+                  style={{ color: '#9ca3af' }}
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -158,8 +159,8 @@ function RegisterMain() {
 
           {/* Confirm Password */}
           <div className="mb-4">
-            <div className="border border-gray-300 rounded-full relative p-2 w-full">
-              <label htmlFor="confirmPassword" className="absolute text-sm top-[-10px] left-5 bg-white px-2">
+            <div className="auth-border rounded-full relative p-2 w-full" style={{ borderWidth: '1px', borderStyle: 'solid' }}>
+              <label htmlFor="confirmPassword" className="auth-label absolute text-sm top-[-10px] left-5 px-2">
                 Confirm Password
               </label>
               <input
@@ -168,7 +169,7 @@ function RegisterMain() {
                 placeholder="Re-enter password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
+                className="auth-input w-full pl-5 pt-1 pr-10 border-none rounded-full focus:outline-none"
                 required
               />
             </div>
@@ -180,11 +181,11 @@ function RegisterMain() {
               type="checkbox"
               checked={agree}
               onChange={() => setAgree(!agree)}
-              className="mr-2 accent-black"
+              className="mr-2 accent-teal-500"
             />
-            <p>
+            <p style={{ color: 'var(--text-color)' }}>
               I agree to the{" "}
-              <a href="#" className="text-black font-medium hover:underline">
+              <a href="#" className="auth-link font-medium hover:underline">
                 Terms & Conditions
               </a>
             </p>
@@ -194,27 +195,27 @@ function RegisterMain() {
           <button
             type="submit"
             disabled={submitting || isLoading}
-            className="w-full bg-black text-white py-2 rounded-full font-medium hover:bg-gray-800 mb-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="auth-btn-primary mb-2"
           >
             {submitting ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
-        <div className="text-center text-gray-400 mb-2">or</div>
+        <div className="text-center auth-divider mb-2">or</div>
 
         <div className="flex justify-center gap-4 flex-wrap">
           <a
             href={`${OAUTH_URL}/google`}
-            className="flex items-center gap-2 border border-gray-300 rounded-full px-6 py-2 hover:bg-gray-100 transition"
+            className="auth-btn-outline"
           >
             <FaGoogle className="text-red-400 text-lg" />
             <span className="text-xs">Continue with Google</span>
           </a>
           <a
             href={`${OAUTH_URL}/github`}
-            className="flex items-center gap-2 border border-gray-300 rounded-full px-6 py-2 hover:bg-gray-100 transition"
+            className="auth-btn-outline"
           >
-            <FaGithub className="text-black-500 text-lg" />
+            <FaGithub className="text-lg" />
             <span className="text-xs">Continue with Github</span>
           </a>
         </div>

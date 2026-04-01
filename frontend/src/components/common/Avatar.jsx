@@ -1,32 +1,40 @@
 import React, { useMemo } from "react";
 
 const sizeMap = {
-    xs: "w-8 h-8 text-xs",
-    sm: "w-10 h-10 text-sm",
-    md: "w-12 h-12 text-sm",
-    lg: "w-16 h-16 text-lg",
-    xl: "w-24 h-24 text-2xl",
+    xs: { width: 32, height: 32, text: "text-[10px]" },
+    sm: { width: 40, height: 40, text: "text-[11px]" },
+    md: { width: 44, height: 44, text: "text-[12px]" },
+    lg: { width: 56, height: 56, text: "text-[16px]" },
+    xl: { width: 80, height: 80, text: "text-[22px]" },
 };
 
 const dotSizeMap = {
-    xs: "w-2 h-2 -right-0 -bottom-0",
-    sm: "w-2.5 h-2.5 -right-0.5 -bottom-0.5",
-    md: "w-3 h-3 -right-0.5 -bottom-0.5",
-    lg: "w-3.5 h-3.5 right-0 bottom-0",
-    xl: "w-4 h-4 right-1 bottom-1",
+    xs: { size: 8, offset: -1 },
+    sm: { size: 10, offset: -2 },
+    md: { size: 10, offset: -2 },
+    lg: { size: 12, offset: -1 },
+    xl: { size: 14, offset: 2 },
+};
+
+const radiusMap = {
+    xs: 8,
+    sm: 10,
+    md: 12,
+    lg: 14,
+    xl: 18,
 };
 
 // Generate consistent color from name
 const getInitialColor = (name) => {
     const colors = [
-        "bg-indigo-500",
-        "bg-teal-500",
-        "bg-amber-500",
-        "bg-rose-500",
-        "bg-violet-500",
-        "bg-cyan-500",
-        "bg-emerald-500",
-        "bg-fuchsia-500",
+        "#6366f1", // indigo
+        "#14b8a6", // teal
+        "#f59e0b", // amber
+        "#f43f5e", // rose
+        "#8b5cf6", // violet
+        "#06b6d4", // cyan
+        "#10b981", // emerald
+        "#d946ef", // fuchsia
     ];
     let hash = 0;
     for (let i = 0; i < (name || "").length; i++) {
@@ -36,6 +44,8 @@ const getInitialColor = (name) => {
 };
 
 const Avatar = ({ src, name = "", isOnline, size = "md", className = "" }) => {
+    const [imgError, setImgError] = React.useState(false);
+
     const initials = useMemo(() => {
         const parts = name.trim().split(" ");
         if (parts.length >= 2) {
@@ -45,19 +55,38 @@ const Avatar = ({ src, name = "", isOnline, size = "md", className = "" }) => {
     }, [name]);
 
     const bgColor = useMemo(() => getInitialColor(name), [name]);
+    const sizeInfo = sizeMap[size] || sizeMap.md;
+    const dotInfo = dotSizeMap[size] || dotSizeMap.md;
+    const borderRadius = radiusMap[size] || radiusMap.md;
+
+    // Reset error if src changes
+    React.useEffect(() => { setImgError(false); }, [src]);
+
+    const hasValidImage = src && src.trim() !== "" && !imgError;
+
+    const containerStyle = {
+        width: sizeInfo.width,
+        height: sizeInfo.height,
+        minWidth: sizeInfo.width,
+        minHeight: sizeInfo.height,
+        borderRadius,
+    };
 
     return (
-        <div className={`relative shrink-0 ${className}`}>
-            {src ? (
+        <div className={`relative shrink-0 ${className}`} style={{ width: sizeInfo.width, height: sizeInfo.height }}>
+            {hasValidImage ? (
                 <img
                     src={src}
                     alt={name}
-                    className={`${sizeMap[size]} rounded-full object-cover ring-2 ring-gray-50 dark:ring-gray-900`}
+                    style={containerStyle}
+                    className="object-cover ring-2 ring-gray-100 dark:ring-gray-800"
                     loading="lazy"
+                    onError={() => setImgError(true)}
                 />
             ) : (
                 <div
-                    className={`${sizeMap[size]} ${bgColor} rounded-full flex items-center justify-center text-white font-bold ring-2 ring-gray-50 dark:ring-gray-900`}
+                    style={{ ...containerStyle, backgroundColor: bgColor }}
+                    className={`flex items-center justify-center text-white font-bold ring-2 ring-gray-100 dark:ring-gray-800 ${sizeInfo.text}`}
                 >
                     {initials}
                 </div>
@@ -66,8 +95,14 @@ const Avatar = ({ src, name = "", isOnline, size = "md", className = "" }) => {
             {/* Online indicator */}
             {isOnline !== undefined && (
                 <span
-                    className={`absolute ${dotSizeMap[size]} rounded-full border-2 border-white dark:border-gray-900 ${isOnline ? "bg-green-500" : "bg-gray-400"
-                        }`}
+                    style={{
+                        width: dotInfo.size,
+                        height: dotInfo.size,
+                        right: dotInfo.offset,
+                        bottom: dotInfo.offset,
+                        position: 'absolute',
+                    }}
+                    className={`rounded-full border-2 border-white dark:border-gray-900 ${isOnline ? "bg-green-500" : "bg-gray-400"}`}
                 />
             )}
         </div>

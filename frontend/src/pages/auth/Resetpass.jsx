@@ -28,14 +28,8 @@ function Resetpass() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitting) return;
-
-    if (password !== confirmPassword) {
-      return;
-    }
-
-    if (password.length < 6) {
-      return;
-    }
+    if (password !== confirmPassword) return;
+    if (password.length < 6) return;
 
     setSubmitting(true);
     try {
@@ -57,19 +51,20 @@ function Resetpass() {
       <div className="login-right relative">
         <Link
           to="/login/forgot/verification"
-          className="absolute top-20 left-5 text-gray-600 hover:text-black"
+          className="absolute top-20 left-5"
+          style={{ color: 'var(--text-color)' }}
         >
           <FaArrowLeft size={20} />
         </Link>
 
-        <h2 className="text-3xl mb-3">Reset your password</h2>
-        <p className="text-sm text-gray-600 mb-6">
+        <h2 className="text-3xl mb-3" style={{ color: 'var(--text-color)' }}>Reset your password</h2>
+        <p className="text-sm mb-6" style={{ color: '#9ca3af' }}>
           Your new password must be at least 6 characters.
         </p>
 
         <form onSubmit={handleSubmit} className="w-[75%]">
-          <div className="border border-gray-300 rounded-full relative p-2 w-full mb-4">
-            <label className="absolute text-sm -top-2 left-5 bg-white px-2">
+          <div className="auth-border rounded-full relative p-2 w-full mb-4" style={{ borderWidth: '1px', borderStyle: 'solid' }}>
+            <label className="auth-label absolute text-sm -top-2 left-5 px-2">
               Password
             </label>
             <div className="relative">
@@ -77,12 +72,13 @@ function Resetpass() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-5 pr-10 border-none rounded-full focus:outline-none"
+                className="auth-input w-full pl-5 pr-10 border-none rounded-full focus:outline-none"
                 required
                 minLength={6}
               />
               <span
                 className="absolute right-4 top-2 cursor-pointer"
+                style={{ color: '#9ca3af' }}
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -90,8 +86,8 @@ function Resetpass() {
             </div>
           </div>
 
-          <div className="border border-gray-300 rounded-full relative p-2 w-full mb-4">
-            <label className="absolute text-sm -top-2 left-5 bg-white px-2">
+          <div className="auth-border rounded-full relative p-2 w-full mb-4" style={{ borderWidth: '1px', borderStyle: 'solid' }}>
+            <label className="auth-label absolute text-sm -top-2 left-5 px-2">
               Confirm Password
             </label>
             <div className="relative">
@@ -99,11 +95,12 @@ function Resetpass() {
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-5 pr-10 border-none rounded-full focus:outline-none"
+                className="auth-input w-full pl-5 pr-10 border-none rounded-full focus:outline-none"
                 required
               />
               <span
                 className="absolute right-4 top-2 cursor-pointer"
+                style={{ color: '#9ca3af' }}
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
@@ -120,7 +117,7 @@ function Resetpass() {
           <button
             type="submit"
             disabled={submitting || password !== confirmPassword}
-            className="w-full border border-gray-300 rounded-full px-6 py-2 hover:bg-black hover:text-white mt-5 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="auth-btn-primary mt-5"
           >
             {submitting ? "Resetting..." : "Reset Password"}
           </button>

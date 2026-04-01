@@ -1,7 +1,7 @@
 import express from "express";
 import {
   createGroup,
-  getAllGroups,
+  getMyGroups,
   getGroupById,
   updateGroup,
   deleteGroup,
@@ -14,7 +14,7 @@ const router = express.Router();
 router.use(authenticate);
 
 router.post("/", createGroup);
-router.get("/", getAllGroups);
+router.get("/", getMyGroups);
 router.get("/:id", getGroupById);
 router.put("/:id", updateGroup);
 router.delete("/:id", deleteGroup);

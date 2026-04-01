@@ -1,7 +1,7 @@
 import express from "express";
 import {
   createChat,
-  getUserChats,
+  getUserChatsController as getUserChats,
   getChatById,
   deleteChat,
 } from "../controllers/chat.controller.js";

@@ -73,35 +73,14 @@
   input[type=number] {
     -moz-appearance: textfield;
   }
-  
 
-  .btn-primary {
-    width: 100%;
-    background: black;
-    color: white;
-    padding: 10px 0;
-    border-radius: 999px;
-    font-weight: 500;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  /* Theme-aware focus styles for auth forms */
+  .auth-border:focus-within {
+    border-color: #14b8a6;
+    box-shadow: 0 0 0 1px #14b8a6;
+    transition: all 0.2s ease;
   }
-  
-  .btn-primary:hover {
-    background: #1f2937;
-  }
-  
-  .btn-primary:active {
-    transform: scale(0.96);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-  
 
   input:focus {
     outline: none;
   }
-  
-  .border:focus-within {
-    border-color: black;
-    box-shadow: 0 0 0 1px black;
-    transition: all 0.2s ease;
-  }
-  

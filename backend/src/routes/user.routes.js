@@ -9,6 +9,7 @@ import {
   updateMyProfile,
   changePassword,
   uploadAvatar,
+  getRandomUsers,
 } from "../controllers/user.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 import upload from "../middlewares/upload.middleware.js";
@@ -21,6 +22,9 @@ const router = express.Router();
 
 // Get currently logged-in user
 router.get("/me", authenticate, getCurrentUser);
+
+// Get random users (for discovery mode)
+router.get("/random", authenticate, getRandomUsers);
 
 // Get all users (for chat / admin)
 // 🔒 Protected

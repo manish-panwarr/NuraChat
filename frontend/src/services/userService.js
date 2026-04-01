@@ -18,6 +18,14 @@ const userService = {
   },
 
   /**
+   * Get random users for discovery
+   */
+  fetchRandomUsers: async (count = 7) => {
+    const res = await api.get(`/users/random?count=${count}`);
+    return res.data.users || res.data || [];
+  },
+
+  /**
    * Get user by ID
    */
   fetchUserById: async (userId) => {

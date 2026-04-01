@@ -16,8 +16,24 @@ const groupMemberSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["admin", "member"],
+      enum: ["creator", "admin", "member"],
       default: "member"
+    },
+
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected"],
+      default: "pending"
+    },
+
+    invitedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+
+    invitedAt: {
+      type: Date,
+      default: Date.now
     }
   },
   { timestamps: true }

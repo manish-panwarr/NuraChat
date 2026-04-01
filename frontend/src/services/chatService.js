@@ -26,12 +26,23 @@ export const sendMessage = async (messageData) => {
 };
 
 /**
- * Send a media message (file upload)
+ * Send a media message (file upload) with optional progress tracking
  */
-export const sendMediaMessage = async (formData) => {
-  const res = await api.post("/messages/media", formData, {
+export const sendMediaMessage = async (formData, onUploadProgress) => {
+  const config = {
     headers: { "Content-Type": "multipart/form-data" },
-  });
+  };
+
+  if (onUploadProgress) {
+    config.onUploadProgress = (progressEvent) => {
+      const percentCompleted = Math.round(
+        (progressEvent.loaded * 100) / progressEvent.total
+      );
+      onUploadProgress(percentCompleted);
+    };
+  }
+
+  const res = await api.post("/messages/media", formData, config);
   return res.data;
 };
 
@@ -63,19 +74,24 @@ export const createChat = async (participantId) => {
 
 /**
  * Delete a chat
+ * @param {string} chatId
+ * @param {string} deleteType - "me" (hide for me) or "everyone" (delete permanently)
  */
-export const deleteChat = async (chatId) => {
-  const res = await api.delete(`/chats/${chatId}`);
+export const deleteChat = async (chatId, deleteType = "everyone") => {
+  const res = await api.delete(`/chats/${chatId}?deleteType=${deleteType}`);
   return res.data;
 };
 
 /**
- * Build the full URL for media files stored on backend.
+ * Build the full URL for media files.
+ * Handles both Cloudinary URLs (start with http) and legacy local paths.
  */
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || "http://localhost:5000");
 
 export const getMediaUrl = (path) => {
   if (!path) return null;
+  // Cloudinary URLs and other absolute URLs
   if (path.startsWith("http")) return path;
+  // Legacy local paths
   return `${BACKEND_URL}${path}`;
 };
