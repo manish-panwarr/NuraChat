@@ -51,7 +51,7 @@ const corsOptions = {
       }
 
       const isNgrok = origin.includes('ngrok-free.app') || origin.includes('ngrok.io');
-      if (isDevelopment || isNgrok) {
+      if (isDevelopment) {
         return callback(null, true);
       }
       if (allowedOrigins.includes(origin)) {
