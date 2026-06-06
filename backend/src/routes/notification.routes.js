@@ -8,7 +8,6 @@ import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// Require auth
 router.use(authenticate);
 
 router.get("/", getMyNotifications);

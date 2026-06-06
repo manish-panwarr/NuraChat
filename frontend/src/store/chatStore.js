@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import * as chatService from "../services/chatService";
 
 const useChatStore = create((set, get) => ({
     // Chat list
@@ -12,17 +13,19 @@ const useChatStore = create((set, get) => ({
 
     // Real-time state
     onlineUsers: new Set(),
-    typingUsers: {}, // { chatId: userId }
-    unreadCounts: {}, // { chatId: count }
-    pinnedChats: new Set(), // { chatId }
+    typingUsers: {},
+    unreadCounts: {},
+    pinnedChats: new Set(),
 
     // Notifications
-    notifications: [], // [{ from, message, chatId, timestamp }]
+    notifications: [],
 
     // Chat mode: 'db' (persistent) or 'temp' (WebRTC ephemeral)
     chatMode: "db",
     webrtcStatus: "disconnected",
     tempMessages: [],
+    tempModePending: false,
+    tempModeRequest: null,
 
     // Actions
     setChats: (chats) => set({ chats }),
@@ -33,6 +36,8 @@ const useChatStore = create((set, get) => ({
             tempMessages: [],
             chatMode: "db",
             webrtcStatus: "disconnected",
+            tempModePending: false,
+            tempModeRequest: null,
         }),
 
     setChatLoading: (loading) => set({ chatLoading: loading }),
@@ -67,11 +72,10 @@ const useChatStore = create((set, get) => ({
             newSet.delete(userId);
             return { onlineUsers: newSet };
         }),
-    // Bulk set online users (from initial socket connect)
     setOnlineUsers: (userIds) =>
         set({ onlineUsers: new Set(userIds) }),
 
-    // Typing
+    // Typing..
     setTyping: (chatId, userId) =>
         set((state) => ({
             typingUsers: { ...state.typingUsers, [chatId]: userId },
@@ -113,14 +117,14 @@ const useChatStore = create((set, get) => ({
     setTempMessages: (msgs) => set({ tempMessages: msgs }),
     addTempMessage: (msg) =>
         set((state) => ({ tempMessages: [...state.tempMessages, msg] })),
+    setTempModePending: (pending) => set({ tempModePending: pending }),
+    setTempModeRequest: (request) => set({ tempModeRequest: request }),
 
-    // Update chat list on new message (move chat to top, update last message)
     updateChatOnNewMessage: (chatId, message) =>
         set((state) => {
             const updated = state.chats.map((c) =>
                 c._id === chatId ? { ...c, lastMessageId: message } : c
             );
-            // Move the updated chat to the top
             const chatIndex = updated.findIndex((c) => c._id === chatId);
             if (chatIndex > 0) {
                 const [chat] = updated.splice(chatIndex, 1);
@@ -155,6 +159,70 @@ const useChatStore = create((set, get) => ({
                 m.chatId === chatId ? { ...m, status: "read" } : m
             ),
         })),
+
+    // Asynchronous and local message actions
+    editMessage: async (messageId, encryptedPayload) => {
+        try {
+            const res = await chatService.editMessage(messageId, encryptedPayload);
+            get().editMessageLocal(messageId, res.data);
+            return res.data;
+        } catch (error) {
+            console.error("Failed to edit message:", error);
+            throw error;
+        }
+    },
+
+    deleteMessageForMe: async (messageId) => {
+        try {
+            await chatService.deleteMessageForMe(messageId);
+            get().deleteMessageForMeLocal(messageId);
+        } catch (error) {
+            console.error("Failed to delete message for me:", error);
+            throw error;
+        }
+    },
+
+    deleteMessagesForMeBatch: async (messageIds) => {
+        try {
+            await chatService.deleteMessagesForMeBatch(messageIds);
+            get().deleteMessagesForMeBatchLocal(messageIds);
+        } catch (error) {
+            console.error("Failed to delete batch messages:", error);
+            throw error;
+        }
+    },
+
+    clearChat: async (chatId, groupId) => {
+        try {
+            await chatService.clearChat(chatId, groupId);
+            get().clearChatLocal();
+        } catch (error) {
+            console.error("Failed to clear chat:", error);
+            throw error;
+        }
+    },
+
+    editMessageLocal: (messageId, updatedMessage) =>
+        set((state) => ({
+            messages: state.messages.map((m) =>
+                m._id === messageId ? { ...m, ...updatedMessage } : m
+            ),
+        })),
+
+    deleteMessageForMeLocal: (messageId) =>
+        set((state) => ({
+            messages: state.messages.filter((m) => m._id !== messageId),
+        })),
+
+    deleteMessagesForMeBatchLocal: (messageIds) =>
+        set((state) => ({
+            messages: state.messages.filter((m) => !messageIds.includes(m._id)),
+        })),
+
+    clearChatLocal: () =>
+        set({
+            messages: [],
+        }),
 }));
 
 export default useChatStore;

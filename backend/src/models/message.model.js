@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
@@ -57,11 +56,15 @@ const messageSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     }],
+
+    isEdited: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
-// Indexes for fast message retrieval
 messageSchema.index({ chatId: 1, createdAt: 1 });
 messageSchema.index({ groupId: 1, createdAt: 1 });
 

@@ -1,9 +1,9 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Smile, Mic, Send, Plus, X, FileText, Film, ImageIcon } from "lucide-react";
 import EmojiPicker from "./EmojiPicker";
 import { toast } from "react-hot-toast";
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const ACCEPTED_TYPES = [
     "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
@@ -28,12 +28,23 @@ const MessageInput = ({
     const inputRef = useRef(null);
     const fileInputRef = useRef(null);
     const typingTimeoutRef = useRef(null);
+    const isCurrentlyTyping = useRef(false);
+
+    useEffect(() => {
+        return () => {
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+            if (isCurrentlyTyping.current) {
+                onTyping?.(false);
+            }
+        };
+    }, [onTyping]);
 
     const handleSubmit = useCallback(
         (e) => {
             e?.preventDefault();
 
-            // If there's a file selected, send it
             if (selectedFile) {
                 onFileUpload?.(selectedFile, message.trim());
                 setSelectedFile(null);
@@ -41,6 +52,14 @@ const MessageInput = ({
                 setMessage("");
                 setShowEmoji(false);
                 inputRef.current?.focus();
+
+                if (isCurrentlyTyping.current) {
+                    isCurrentlyTyping.current = false;
+                    onTyping?.(false);
+                }
+                if (typingTimeoutRef.current) {
+                    clearTimeout(typingTimeoutRef.current);
+                }
                 return;
             }
 
@@ -49,8 +68,16 @@ const MessageInput = ({
             setMessage("");
             setShowEmoji(false);
             inputRef.current?.focus();
+
+            if (isCurrentlyTyping.current) {
+                isCurrentlyTyping.current = false;
+                onTyping?.(false);
+            }
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
         },
-        [message, disabled, onSend, onFileUpload, selectedFile]
+        [message, disabled, onSend, onFileUpload, selectedFile, onTyping]
     );
 
     const handleKeyDown = (e) => {
@@ -61,10 +88,31 @@ const MessageInput = ({
     };
 
     const handleInputChange = (e) => {
-        setMessage(e.target.value);
-        onTyping?.(true);
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        const val = e.target.value;
+        setMessage(val);
+
+        if (!val.trim()) {
+            if (isCurrentlyTyping.current) {
+                isCurrentlyTyping.current = false;
+                onTyping?.(false);
+            }
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+            return;
+        }
+
+        if (!isCurrentlyTyping.current) {
+            isCurrentlyTyping.current = true;
+            onTyping?.(true);
+        }
+
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
         typingTimeoutRef.current = setTimeout(() => {
+            isCurrentlyTyping.current = false;
             onTyping?.(false);
         }, 2000);
     };
@@ -94,7 +142,6 @@ const MessageInput = ({
             setFilePreview(null);
         }
 
-        // Reset file input so same file can be re-selected
         e.target.value = "";
     };
 
@@ -142,7 +189,7 @@ const MessageInput = ({
             )}
 
             {/* Input Row */}
-            <div className="relative flex items-center gap-2.5 w-full">
+            <div className="relative flex items-center gap-1 mb-3 sm:gap-2.5 w-full ">
                 {/* Emoji Picker Overlay */}
                 {showEmoji && (
                     <div className="absolute bottom-full mb-3 right-10 z-50 shadow-lg rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800">
@@ -165,13 +212,13 @@ const MessageInput = ({
                 {/* Plus Button */}
                 <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700/50 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shrink-0"
+                    className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg sm:rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700/50 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shrink-0"
                 >
-                    <Plus size={18} strokeWidth={1.5} />
+                    <Plus size={16} className="sm:w-[18px] sm:h-[18px]" strokeWidth={1.5} />
                 </button>
 
                 {/* Input Bar */}
-                <div className="flex-1 border border-gray-100 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-2.5 flex items-center focus-within:border-gray-300 dark:focus-within:border-gray-600 transition-all outline-none border-none border-transparent">
+                <div className="flex-1 border border-gray-100 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-800 rounded-lg sm:rounded-xl px-2 py-2 sm:px-4 sm:py-2.5 flex items-center focus-within:border-gray-300 dark:focus-within:border-gray-600 transition-all outline-none border-none border-transparent ">
                     <input
                         ref={inputRef}
                         type="text"
@@ -180,32 +227,32 @@ const MessageInput = ({
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
                         disabled={disabled}
-                        className="flex-1 bg-transparent border-none outline-none text-[13.5px] text-gray-700 dark:text-gray-100 placeholder-gray-400/70 outline-none border-none"
+                        className="flex-1 bg-transparent border-none outline-none text-[13px] sm:text-[13.5px] text-gray-700 dark:text-gray-100 placeholder-gray-400/70 outline-none border-none"
                     />
 
-                    <div className="flex items-center gap-2.5 shrink-0 ml-2">
+                    <div className="flex items-center gap-1 sm:gap-2.5  shrink-0 ">
                         <button
                             type="button"
                             onClick={() => setShowEmoji((prev) => !prev)}
                             className={`text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors ${showEmoji ? 'text-amber-500' : ''}`}
                         >
-                            <Smile size={18} strokeWidth={1.5} />
+                            <Smile size={16} className="sm:w-[18px] sm:h-[18px]" strokeWidth={1.5} />
                         </button>
 
                         <button
                             type="button"
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                         >
-                            <Mic size={18} strokeWidth={1.5} />
+                            <Mic size={16} className="sm:w-[18px] sm:h-[18px]" strokeWidth={1.5} />
                         </button>
 
                         {(message.trim() || selectedFile) && (
                             <button
                                 onClick={handleSubmit}
                                 disabled={disabled || (!message.trim() && !selectedFile)}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 dark:hover:bg-gray-300 transition-all shadow-sm"
+                                className="w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg sm:rounded-xl bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 dark:hover:bg-gray-300 transition-all shadow-sm shrink-0"
                             >
-                                <Send size={14} className="-ml-0.5" />
+                                <Send size={13} className="sm:w-[15px] sm:h-[15px] -ml-0.5" />
                             </button>
                         )}
                     </div>

@@ -9,11 +9,10 @@ import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// All chat routes require authentication
-router.use(authenticate);
+router.use(authenticate);  // All chat routes require authentication
 
 router.post("/", createChat);
-router.get("/", getUserChats); // Get chats for authenticated user
+router.get("/", getUserChats);
 router.get("/:id", getChatById);
 router.delete("/:id", deleteChat);
 

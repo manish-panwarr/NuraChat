@@ -1,17 +1,14 @@
-import cloudinary from "../config/cloudinary.js";
 import Message from "../models/message.model.js";
 import GroupMember from "../models/groupMember.model.js";
-import { getIO, getSocketId } from "../sockets/socket.js";
+import { getIO, getSocketId, emitToUser, emitToGroup } from "../sockets/socket.js";
+import { uploadToCloudinary } from "../services/cloudinary.service.js";
 
-/**
- * SEND GROUP MESSAGE (TEXT OR MEDIA)
- */
+// @desc send group message
 export const sendGroupMessage = async (req, res) => {
   try {
     const { groupId, messageType, encryptedPayload } = req.body;
     const senderId = req.user._id;
 
-    // 🔒 Check membership (must be accepted creator, admin, or member)
     const member = await GroupMember.findOne({
       groupId,
       userId: senderId,
@@ -34,23 +31,14 @@ export const sendGroupMessage = async (req, res) => {
     };
 
     const savedMessage = await Message.create(payload);
-    
-    // Populate sender info for the socket event
+
     await savedMessage.populate("senderId", "firstName lastName profileImage");
 
-    // 🌐 EMIT TO ALL GROUP MEMBERS
-    // We find all accepted members of this group
     const members = await GroupMember.find({ groupId, status: "accepted" });
     const io = getIO();
-    
+
     members.forEach(m => {
-      // Don't echo back to sender here; frontend handles optimistic UI
-      if (m.userId.toString() !== senderId.toString()) {
-        const memberSocketId = getSocketId(m.userId.toString());
-        if (memberSocketId) {
-          io.to(memberSocketId).emit("new-group-message", savedMessage);
-        }
-      }
+      emitToUser(m.userId.toString(), "new-group-message", savedMessage);
     });
 
     res.status(201).json(savedMessage);
@@ -61,15 +49,12 @@ export const sendGroupMessage = async (req, res) => {
   }
 };
 
-/**
- * GET GROUP MESSAGES
- */
+// @desc get group messages
 export const getGroupMessages = async (req, res) => {
   try {
     const { groupId } = req.params;
     const userId = req.user._id;
 
-    // 🔒 Check membership
     const member = await GroupMember.findOne({
       groupId,
       userId,
@@ -80,7 +65,7 @@ export const getGroupMessages = async (req, res) => {
       return res.status(403).json({ message: "You are not an active member of this group" });
     }
 
-    const messages = await Message.find({ groupId })
+    const messages = await Message.find({ groupId, deletedFor: { $ne: userId } })
       .populate("senderId", "firstName lastName profileImage isOnline")
       .sort({ createdAt: 1 });
 
@@ -92,9 +77,7 @@ export const getGroupMessages = async (req, res) => {
   }
 };
 
-/**
- * SEND GROUP MEDIA MESSAGE
- */
+// @desc send group media message
 export const sendGroupMediaMessage = async (req, res) => {
   try {
     const { groupId, messageType, encryptedPayload } = req.body;
@@ -104,7 +87,6 @@ export const sendGroupMediaMessage = async (req, res) => {
       return res.status(400).json({ message: "Media file is required" });
     }
 
-    // 🔒 Check membership
     const member = await GroupMember.findOne({
       groupId,
       userId: senderId,
@@ -115,9 +97,8 @@ export const sendGroupMediaMessage = async (req, res) => {
       return res.status(403).json({ message: "You are not an active member of this group" });
     }
 
-    // Upload to Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-      resource_type: "auto"
+    const uploadResult = await uploadToCloudinary(req.file.buffer, req.file.mimetype, {
+      folder: `nurachat/group-media/${groupId}`
     });
 
     let resolvedType = messageType || "image";
@@ -132,10 +113,10 @@ export const sendGroupMediaMessage = async (req, res) => {
       groupId,
       senderId,
       messageType: resolvedType,
-      encryptedPayload, // Optional caption
-      mediaUrl: uploadResult.secure_url,
+      encryptedPayload,
+      mediaUrl: uploadResult.url,
+      cloudinaryPublicId: uploadResult.publicId,
       mediaMeta: {
-        public_id: uploadResult.public_id,
         format: uploadResult.format,
         bytes: uploadResult.bytes
       }
@@ -144,17 +125,11 @@ export const sendGroupMediaMessage = async (req, res) => {
     const savedMessage = await Message.create(payload);
     await savedMessage.populate("senderId", "firstName lastName profileImage");
 
-    // 🌐 EMIT TO ALL GROUP MEMBERS
     const members = await GroupMember.find({ groupId, status: "accepted" });
     const io = getIO();
-    
+
     members.forEach(m => {
-      if (m.userId.toString() !== senderId.toString()) {
-        const memberSocketId = getSocketId(m.userId.toString());
-        if (memberSocketId) {
-          io.to(memberSocketId).emit("new-group-message", savedMessage);
-        }
-      }
+      emitToUser(m.userId.toString(), "new-group-message", savedMessage);
     });
 
     res.status(201).json(savedMessage);
@@ -165,15 +140,12 @@ export const sendGroupMediaMessage = async (req, res) => {
   }
 };
 
-/**
- * DELETE GROUP MESSAGE
- */
+// @desc delete group message
 export const deleteGroupMessage = async (req, res) => {
   try {
     const msg = await Message.findById(req.params.id);
     if (!msg) return res.status(404).json({ message: "Message not found" });
 
-    // In groups, only sender or group admins can delete
     if (msg.senderId.toString() !== req.user._id.toString()) {
       const member = await GroupMember.findOne({ groupId: msg.groupId, userId: req.user._id });
       if (!member || (member.role !== "admin" && member.role !== "creator")) {

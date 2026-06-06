@@ -13,7 +13,6 @@ const useAuthStore = create(
 
             login: (user, token) => {
                 set({ user, token, isAuthenticated: true });
-                // Legacy compat — some components still read localStorage user
                 localStorage.setItem("user", JSON.stringify({ ...user, token }));
             },
 
@@ -30,7 +29,7 @@ const useAuthStore = create(
             setLoading: (loading) => set({ isLoading: loading }),
         }),
         {
-            name: "nurachat-auth",
+            name: "elio-auth",
             partialize: (state) => ({
                 user: state.user,
                 token: state.token,

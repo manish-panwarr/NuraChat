@@ -17,7 +17,7 @@ const otpSchema = new mongoose.Schema(
       required: true,
     },
     data: {
-      type: mongoose.Schema.Types.Mixed, // Stores firstName, lastName, password for register
+      type: mongoose.Schema.Types.Mixed,
       default: {},
     },
     verified: {

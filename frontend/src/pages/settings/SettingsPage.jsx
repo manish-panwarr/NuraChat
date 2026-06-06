@@ -1,18 +1,51 @@
-import React from "react";
-import { ArrowLeft, Moon, Sun, LogOut, User, Shield, Palette, Bell, Info } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ArrowLeft, Moon, Sun, LogOut, User, Shield, Palette, Bell, Info, Check, Languages, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
 import useUiStore from "../../store/uiStore";
 import Avatar from "../../components/common/Avatar";
 import { toast } from "react-hot-toast";
+import translationService from "../../services/translationService";
 
 const SettingsPage = () => {
     const navigate = useNavigate();
     const user = useAuthStore((s) => s.user);
     const logout = useAuthStore((s) => s.logout);
+    const updateUser = useAuthStore((s) => s.updateUser);
     const theme = useUiStore((s) => s.theme);
     const toggleTheme = useUiStore((s) => s.toggleTheme);
     const isDark = theme === "dark";
+
+    const [supportedLanguages, setSupportedLanguages] = useState([
+        "English", "Hindi", "Spanish", "French", "German", "Japanese", "Chinese", "Arabic"
+    ]);
+    const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
+
+    useEffect(() => {
+        translationService.getSupportedLanguages()
+            .then(langs => {
+                if (langs && langs.length > 0) {
+                    setSupportedLanguages(langs);
+                }
+            })
+            .catch(() => {});
+    }, []);
+
+    const selectedLanguage = user?.translationLanguage || "English";
+
+    const handleUpdateLanguage = async (language) => {
+        if (language === selectedLanguage) return;
+        setIsUpdatingLanguage(true);
+        try {
+            await translationService.updateTranslationLanguage(language);
+            updateUser({ translationLanguage: language });
+            toast.success(`Preferred language set to ${language}`);
+        } catch (err) {
+            toast.error("Failed to update preferred language");
+        } finally {
+            setIsUpdatingLanguage(false);
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -104,6 +137,50 @@ const SettingsPage = () => {
                         </div>
                     </div>
 
+                    {/* Translation Settings */}
+                    <div className="panel-glass overflow-hidden">
+                        <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800/50 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Languages size={16} className="text-teal-500" />
+                                <h3 className="text-[13px] font-bold text-gray-400 uppercase tracking-wider font-display">Translation Settings</h3>
+                            </div>
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-teal-50 dark:bg-teal-900/30 text-teal-500 border border-teal-200/50">HF AI Powered</span>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div>
+                                <label className="text-[13.5px] font-bold text-gray-700 dark:text-gray-200 block mb-1.5">Preferred Language</label>
+                                <p className="text-[12px] text-gray-400 mb-4">Select the language that incoming messages will be translated into.</p>
+                                
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                    {supportedLanguages.map((lang) => {
+                                        const isSelected = selectedLanguage === lang;
+                                        return (
+                                            <button
+                                                key={lang}
+                                                onClick={() => handleUpdateLanguage(lang)}
+                                                disabled={isUpdatingLanguage}
+                                                className={`px-3 py-2.5 rounded-xl border text-[13px] font-semibold transition-all flex items-center justify-between group cursor-pointer ${
+                                                    isSelected
+                                                        ? "bg-teal-500 text-white border-teal-500 shadow-md shadow-teal-500/20"
+                                                        : "bg-gray-50/50 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300 border-gray-100 dark:border-gray-800/50 hover:border-teal-500/50 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                                }`}
+                                            >
+                                                <span>{lang}</span>
+                                                {isSelected && (
+                                                    isUpdatingLanguage ? (
+                                                        <Loader2 size={12} className="animate-spin text-white" />
+                                                    ) : (
+                                                        <Check size={13} className="shrink-0 text-white" />
+                                                    )
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Account */}
                     <div className="panel-glass overflow-hidden">
                         <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800/50">
@@ -139,7 +216,7 @@ const SettingsPage = () => {
                         <div className="p-2">
                             <SettingItem
                                 icon={Info}
-                                label="About NuraChat"
+                                label="About ꍟ꒒ꀤꂦ"
                                 desc="Version 1.0.0 • Real-time encrypted messaging"
                                 action={() => {}}
                             />

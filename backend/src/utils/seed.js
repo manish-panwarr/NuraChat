@@ -8,10 +8,8 @@ import crypto from "crypto";
 
 dotenv.config();
 
-// Simple AES encryption compatible with CryptoJS (standard format)
-// Note: In a real E2EE, keys are exchanged via Diffie-Hellman/Signal Protocol.
-// Here we use a hardcoded shared secret for demonstration purposes.
-const SECRET_KEY = "nurachat-secret-key"; 
+
+const SECRET_KEY = "nurachat-secret-key";
 
 const encrypt = (text) => {
   return "ENC_" + Buffer.from(text).toString('base64');
@@ -32,17 +30,14 @@ const seedDatabase = async () => {
     await mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/nurachat");
     console.log("Connected to MongoDB");
 
-    // Clear existing data
     await User.deleteMany({});
     await Chat.deleteMany({});
     await Message.deleteMany({});
     console.log("Cleared existing data");
 
-    // Create Users
     const createdUsers = await User.insertMany(users);
     console.log(`Created ${createdUsers.length} users`);
 
-    // Create Chats and Messages
     const [alice, bob, charlie, david, eve] = createdUsers;
 
     const chatPairs = [

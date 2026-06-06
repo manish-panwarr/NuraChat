@@ -1,8 +1,6 @@
 import cloudinary from "../config/cloudinary.js";
 
-/**
- * Determine Cloudinary resource type from MIME type
- */
+//@desc cloudinary resource type
 function getResourceType(mimetype) {
     if (!mimetype) return "auto";
     if (mimetype.startsWith("image/")) return "image";
@@ -10,13 +8,7 @@ function getResourceType(mimetype) {
     return "raw"; // documents, audio, etc.
 }
 
-/**
- * Upload a file buffer to Cloudinary
- * @param {Buffer} fileBuffer - The file buffer from multer memoryStorage
- * @param {string} mimetype - The MIME type of the file
- * @param {object} options - Additional options (folder, public_id, etc.)
- * @returns {Promise<{url: string, publicId: string, resourceType: string}>}
- */
+//@desc upload file to cloudinary
 export const uploadToCloudinary = (fileBuffer, mimetype, options = {}) => {
     return new Promise((resolve, reject) => {
         const resourceType = getResourceType(mimetype);
@@ -54,12 +46,7 @@ export const uploadToCloudinary = (fileBuffer, mimetype, options = {}) => {
     });
 };
 
-/**
- * Delete a single file from Cloudinary
- * @param {string} publicId - The Cloudinary public ID
- * @param {string} resourceType - 'image', 'video', or 'raw'
- * @returns {Promise<object>}
- */
+//@desc delete single file from cloudinar
 export const deleteFromCloudinary = async (publicId, resourceType = "image") => {
     try {
         const result = await cloudinary.uploader.destroy(publicId, {
@@ -72,15 +59,10 @@ export const deleteFromCloudinary = async (publicId, resourceType = "image") => 
     }
 };
 
-/**
- * Batch delete multiple files from Cloudinary
- * @param {Array<{publicId: string, resourceType: string}>} items
- * @returns {Promise<object[]>}
- */
+//@desc : batch delete multiple files from cloudinary
 export const deleteMultipleFromCloudinary = async (items) => {
     if (!items || items.length === 0) return [];
 
-    // Group by resource type for batch operations
     const grouped = {};
     for (const item of items) {
         const type = item.resourceType || "image";
@@ -97,7 +79,6 @@ export const deleteMultipleFromCloudinary = async (items) => {
             results.push(result);
         } catch (error) {
             console.error(`Cloudinary batch delete error for ${resourceType}:`, error);
-            // Continue with other types even if one fails
         }
     }
 

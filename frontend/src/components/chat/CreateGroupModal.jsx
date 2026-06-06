@@ -72,9 +72,9 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
                 description
             });
 
-            // Then invite selected members sequentially (or Promise.all)
+            // Then invite selected members sequentially 
             if (selectedMembers.length > 0) {
-                const invitePromises = selectedMembers.map(member => 
+                const invitePromises = selectedMembers.map(member =>
                     groupService.addGroupMember(newGroup._id, member._id, "member")
                 );
                 await Promise.allSettled(invitePromises);
@@ -97,10 +97,9 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-fade-in text-left">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-            
+
             <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden animate-scale-in border border-gray-100 dark:border-gray-800">
-                
-                {/* Header */}
+
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 flex items-center justify-center">
@@ -119,7 +118,7 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5">
-                    
+
                     {/* Basic Info */}
                     <div className="space-y-4">
                         <div>
@@ -152,7 +151,7 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
                             <span className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Add Members</span>
                             <span className="text-[11px] font-medium text-teal-600 dark:text-teal-400">{selectedMembers.length} selected</span>
                         </label>
-                        
+
                         <div className="relative mb-3">
                             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                             <input
@@ -189,7 +188,7 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
                             ) : searchResults.map(u => {
                                 const isSelected = selectedMembers.some(sm => sm._id === u._id);
                                 return (
-                                    <div 
+                                    <div
                                         key={u._id}
                                         onClick={() => handleToggleMember(u)}
                                         className="flex items-center justify-between p-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-50 dark:border-gray-800/50 last:border-0 transition-colors group"

@@ -3,9 +3,9 @@ import useAuthStore from "../store/authStore";
 import authService from "../services/authService";
 import { toast } from "react-hot-toast";
 
-/**
- * Auth hook wrapping Zustand authStore + authService API calls.
- */
+
+//@desc : Auth hook wrapping Zustand authStore + authService API calls.
+
 export default function useAuth() {
     const {
         user,
@@ -63,7 +63,6 @@ export default function useAuth() {
             setLoading(true);
             try {
                 const res = await authService.verifyOtp({ email, otp, type });
-                // If registration flow, auto login
                 if (type === "register" && res.user && res.token) {
                     storeLogin(res.user, res.token);
                     toast.success("Account created! Welcome aboard!");

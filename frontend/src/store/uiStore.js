@@ -5,7 +5,7 @@ const useUiStore = create(
     persist(
         (set) => ({
             theme: "light",
-            sidebarTab: "private", // 'public' | 'private'
+            sidebarTab: "private",
             showProfilePanel: true,
             isMobileMenuOpen: false,
             isMobileChatOpen: false,
@@ -13,7 +13,6 @@ const useUiStore = create(
             toggleTheme: () =>
                 set((state) => {
                     const next = state.theme === "light" ? "dark" : "light";
-                    // Apply to <html> immediately
                     if (next === "dark") {
                         document.documentElement.classList.add("dark");
                     } else {
@@ -39,10 +38,9 @@ const useUiStore = create(
             setMobileChatOpen: (open) => set({ isMobileChatOpen: open }),
         }),
         {
-            name: "nurachat-ui",
+            name: "elio-ui",
             partialize: (state) => ({ theme: state.theme }),
             onRehydrateStorage: () => (state) => {
-                // Apply theme on app load
                 if (state?.theme === "dark") {
                     document.documentElement.classList.add("dark");
                 } else {

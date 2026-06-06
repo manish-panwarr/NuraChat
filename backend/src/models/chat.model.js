@@ -20,12 +20,18 @@ const chatSchema = new mongoose.Schema(
       ref: "Message",
     },
 
+    deletedFor: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
     messageExpiryAt: Date,
   },
   { timestamps: true }
 );
 
-// Compound index for fast lookup of chats by participant
 chatSchema.index({ participants: 1 });
 chatSchema.index({ updatedAt: -1 });
 

@@ -1,6 +1,6 @@
 import multer from "multer";
 
-// Allowed file types (including video)
+//@desc : Allowed file types (including video)
 const allowedMimeTypes = [
     // Images
     "image/jpeg",
@@ -24,7 +24,7 @@ const allowedMimeTypes = [
     "audio/webm",
 ];
 
-// Use memory storage — files go into buffer for Cloudinary upload (no local disk writes)
+//@desc : Cloudinary upload 
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
@@ -39,7 +39,7 @@ const upload = multer({
     storage,
     fileFilter,
     limits: {
-        fileSize: 25 * 1024 * 1024, // 25MB max (supports video)
+        fileSize: 5 * 1024 * 1024, // 5MB max (supports video)
     },
 });
 

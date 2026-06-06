@@ -5,6 +5,7 @@ class WebRTCService {
     dataChannel = null;
     onMessageCallback = null;
     onStatusChange = null;
+    iceCandidatesQueue = [];
 
     config = {
         iceServers: [
@@ -16,14 +17,19 @@ class WebRTCService {
     init(targetUserId, onMessage, onStatus) {
         this.onMessageCallback = onMessage;
         this.onStatusChange = onStatus;
-
+        this.iceCandidatesQueue = [];
         this.peerConnection = new RTCPeerConnection(this.config);
+        this.peerConnection.oniceconnectionstatechange = () => {
+            console.log(`[WebRTC] ICE connection state: ${this.peerConnection?.iceConnectionState}`);
+            if (this.peerConnection?.iceConnectionState === "failed") {
+                console.error("[WebRTC] ICE connection failed");
+            }
+        };
 
         // Setup Data Channel for messages
         this.dataChannel = this.peerConnection.createDataChannel("chat");
         this.setupDataChannel(this.dataChannel);
 
-        // Handle receiving data channels (if we are the answerer)
         this.peerConnection.ondatachannel = (event) => {
             this.setupDataChannel(event.channel);
         };
@@ -39,9 +45,9 @@ class WebRTCService {
         };
 
         // Listen for signaling events from socket
-        socketService.on("incoming-call", this.handleIncomingCall.bind(this));
-        socketService.on("call-answered", this.handleCallAnswered.bind(this));
-        socketService.on("ice-candidate", this.handleIceCandidate.bind(this));
+        socketService.on("incoming-call", this.handleIncomingCall);
+        socketService.on("call-answered", this.handleCallAnswered);
+        socketService.on("ice-candidate", this.handleIceCandidate);
     }
 
     setupDataChannel(channel) {
@@ -63,22 +69,45 @@ class WebRTCService {
         socketService.emit("call-user", { to: targetUserId, offer });
     }
 
-    async handleIncomingCall({ from, offer }) {
+    handleIncomingCall = async ({ from, offer }) => {
         if (!this.peerConnection) return;
         await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        await this.processQueuedIceCandidates();
         const answer = await this.peerConnection.createAnswer();
         await this.peerConnection.setLocalDescription(answer);
         socketService.emit("answer-call", { to: from, answer });
-    }
+    };
 
-    async handleCallAnswered({ answer }) {
+    handleCallAnswered = async ({ answer }) => {
         if (!this.peerConnection) return;
         await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-    }
+        await this.processQueuedIceCandidates();
+    };
 
-    async handleIceCandidate({ candidate }) {
+    handleIceCandidate = async ({ candidate }) => {
         if (!this.peerConnection) return;
-        await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        if (!this.peerConnection.remoteDescription || !this.peerConnection.remoteDescription.type) {
+            this.iceCandidatesQueue.push(candidate);
+            return;
+        }
+        try {
+            await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (e) {
+            console.error("[WebRTC] Error adding ICE candidate directly:", e);
+        }
+    };
+
+    async processQueuedIceCandidates() {
+        if (!this.peerConnection || !this.iceCandidatesQueue.length) return;
+        const candidates = [...this.iceCandidatesQueue];
+        this.iceCandidatesQueue = [];
+        for (const candidate of candidates) {
+            try {
+                await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (e) {
+                console.error("[WebRTC] Error adding queued ICE candidate:", e);
+            }
+        }
     }
 
     sendMessage(message) {

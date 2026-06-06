@@ -9,8 +9,29 @@ const useGroupStore = create((set, get) => ({
   groupMembers: [],
   isLoadingGroups: false,
   isLoadingMessages: false,
-  typingUsers: {}, // { groupId: [userIds] }
-  
+  typingUsers: {},
+  activeGroupCalls: {},
+
+  setActiveGroupCall: (groupId, callDetails) => {
+    set((state) => {
+      const nextCalls = { ...state.activeGroupCalls };
+      if (callDetails.active) {
+        nextCalls[groupId] = callDetails;
+      } else {
+        delete nextCalls[groupId];
+      }
+      return { activeGroupCalls: nextCalls };
+    });
+  },
+
+  setActiveGroupCallsList: (callsList) => {
+    const nextCalls = {};
+    callsList.forEach(c => {
+      nextCalls[c.groupId] = c;
+    });
+    set({ activeGroupCalls: nextCalls });
+  },
+
   fetchMyGroups: async () => {
     set({ isLoadingGroups: true });
     try {
@@ -36,7 +57,6 @@ const useGroupStore = create((set, get) => ({
     set({ isLoadingMessages: true });
     try {
       const messages = await groupService.getGroupMessages(groupId);
-      // We don't decrypt here automatically, components will handle displaying them using the group's encryptionSalt
       set({ groupMessages: messages, isLoadingMessages: false });
     } catch (error) {
       console.error("Failed to fetch group messages", error);
@@ -53,9 +73,96 @@ const useGroupStore = create((set, get) => ({
     }
   },
 
+  addGroupMember: async (groupId, userId, role = "member") => {
+    try {
+      const member = await groupService.addGroupMember(groupId, userId, role);
+      set((state) => ({
+        groupMembers: [...state.groupMembers, member]
+      }));
+      return member;
+    } catch (error) {
+      console.error("Failed to add member", error);
+      throw error;
+    }
+  },
+
+  removeGroupMember: async (groupId, memberId) => {
+    try {
+      await groupService.removeGroupMember(memberId);
+      set((state) => ({
+        groupMembers: state.groupMembers.filter((m) => m._id !== memberId)
+      }));
+    } catch (error) {
+      console.error("Failed to remove member", error);
+      throw error;
+    }
+  },
+
+  updateMemberRole: async (memberId, role) => {
+    try {
+      const updated = await groupService.updateMemberRole(memberId, role);
+      set((state) => ({
+        groupMembers: state.groupMembers.map((m) => m._id === memberId ? updated : m)
+      }));
+    } catch (error) {
+      console.error("Failed to update member role", error);
+      throw error;
+    }
+  },
+
+  updateGroup: async (groupId, updateData) => {
+    try {
+      const updated = await groupService.updateGroup(groupId, updateData);
+      set((state) => ({
+        groups: state.groups.map((g) => g._id === groupId ? updated : g),
+        selectedGroup: state.selectedGroup?._id === groupId ? updated : state.selectedGroup
+      }));
+      return updated;
+    } catch (error) {
+      console.error("Failed to update group details", error);
+      throw error;
+    }
+  },
+
+  uploadGroupAvatar: async (groupId, file) => {
+    try {
+      const res = await groupService.uploadGroupAvatar(groupId, file);
+      const updated = res.group;
+      set((state) => ({
+        groups: state.groups.map((g) => g._id === groupId ? updated : g),
+        selectedGroup: state.selectedGroup?._id === groupId ? updated : state.selectedGroup
+      }));
+      return updated;
+    } catch (error) {
+      console.error("Failed to upload group avatar", error);
+      throw error;
+    }
+  },
+
+  editGroupMessageLocal: (messageId, updatedMessage) =>
+    set((state) => ({
+      groupMessages: state.groupMessages.map((m) =>
+        m._id === messageId ? { ...m, ...updatedMessage } : m
+      ),
+    })),
+
+  deleteGroupMessageForMeLocal: (messageId) =>
+    set((state) => ({
+      groupMessages: state.groupMessages.filter((m) => m._id !== messageId),
+    })),
+
+  deleteGroupMessagesForMeBatchLocal: (messageIds) =>
+    set((state) => ({
+      groupMessages: state.groupMessages.filter((m) => !messageIds.includes(m._id)),
+    })),
+
+  clearGroupChatLocal: () =>
+    set({
+      groupMessages: [],
+    }),
+
   addGroupMessage: (message) => {
     set((state) => {
-      // Only add if it belongs to selected group
       if (state.selectedGroup && state.selectedGroup._id === message.groupId) {
         const exists = state.groupMessages.find(m => m._id === message._id);
         if (exists) return state;

@@ -1,14 +1,15 @@
 import crypto from "crypto";
 import dotenv from "dotenv";
-dotenv.config(); // 👈 sabse upar
+dotenv.config();
 const algorithm = process.env.ENCRYPTION_ALGO;
 
 if (!process.env.ENCRYPTION_KEY) {
-  throw new Error("❌ ENCRYPTION_KEY missing in .env file");
+  throw new Error("ENCRYPTION_KEY missing in .env file");
 }
 
 const key = Buffer.from(process.env.ENCRYPTION_KEY, "utf-8");
 
+//@desc : encrypt text
 export const encryptText = (text) => {
   const iv = crypto.randomBytes(16);
 
@@ -26,6 +27,8 @@ export const encryptText = (text) => {
   };
 };
 
+
+//@desc : decrypt text
 export const decryptText = (encryptedData) => {
   const decipher = crypto.createDecipheriv(
     algorithm,

@@ -4,8 +4,9 @@ import User from "../models/user.model.js";
 import OTP from "../models/otp.model.js";
 import { sendAndSaveOtp, verifyOtpToken } from "../utils/otp.service.js";
 
-/* ================= LOGIN ================= */
-
+//@desc : Login user
+//@route : POST /api/auth/login
+//@access : Public
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -29,12 +30,12 @@ export const login = async (req, res) => {
 
   const safe = user.toObject();
   delete safe.passwordHash;
-
-  // Faster response, use secure cookies in production if desired later
   res.json({ user: safe, token });
 };
 
-/* ================= REGISTER ================= */
+//@desc : Register user
+//@route : POST /api/auth/register
+//@access : Public
 export const registerInit = async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
@@ -50,30 +51,28 @@ export const registerInit = async (req, res) => {
   res.json({ message: "OTP sent" });
 };
 
-/* ================= VERIFY OTP (REGISTER / FORGOT) ================= */
+//@desc : Verify OTP for both register and forgot password
+//@route : POST /api/auth/verify-otp
+//@access : Public
 export const verifyOtp = async (req, res) => {
-  const { email, otp, type } = req.body; // Expecting 'type' from client (register or forgot)
+  const { email, otp, type } = req.body;
 
-  // Default type to avoid breaking existing clients completely if missing
   const verifyType = type || "register";
-
   const result = await verifyOtpToken(email, otp, verifyType);
 
   if (!result.success) {
     return res.status(400).json({ message: result.message });
   }
-
   const record = result.record;
 
-  /* ===== FORGOT PASSWORD FLOW ===== */
+  /*  If requested for FORGOT PASSWORD */
   if (record.type === "forgot") {
-    // Note: To make this robust, we update verify status instead of just deleting
     record.verified = true;
     await record.save();
     return res.json({ message: "OTP verified. Proceed to reset password." });
   }
 
-  /* ===== REGISTER FLOW ===== */
+  /* if requested for REGISTER */
   const { firstName, lastName, password } = record.data;
 
   const passwordHash = await bcrypt.hash(password, 10);
@@ -87,7 +86,6 @@ export const verifyOtp = async (req, res) => {
     providers: [{ provider: "local" }],
   });
 
-  // OTP was used and successful, delete from DB
   await record.deleteOne();
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -100,7 +98,9 @@ export const verifyOtp = async (req, res) => {
   res.json({ user: safe, token });
 };
 
-/* ================= FORGOT PASSWORD ================= */
+//@desc : Forgot password
+//@route : POST /api/auth/forgot
+//@access : Public
 export const sendForgotOtp = async (req, res) => {
   const { email } = req.body;
 
@@ -110,14 +110,15 @@ export const sendForgotOtp = async (req, res) => {
   const result = await sendAndSaveOtp(email, "forgot");
 
   if (!result.success) {
-    // Keep next:"reset-password" signal for UI compatibility
     return res.status(429).json({ ...result, next: "reset-password" });
   }
 
   res.json({ message: "OTP sent" });
 };
 
-/* ================= RESET PASSWORD ================= */
+//@desc : Reset password
+//@route : POST /api/auth/reset-password
+//@access : Public
 export const resetPassword = async (req, res) => {
   const { email, password } = req.body;
 
@@ -138,7 +139,9 @@ export const resetPassword = async (req, res) => {
   res.json({ message: "Password reset successful" });
 };
 
-/* ================= SET PASSWORD (OAUTH) ================= */
+//@desc : Set password (OAUTH)
+//@route : POST /api/auth/set-password
+//@access : Private
 export const setPassword = async (req, res) => {
   const { password } = req.body;
   const userId = req.user._id;

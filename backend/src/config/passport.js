@@ -4,6 +4,8 @@ import { Strategy as GitHubStrategy } from "passport-github2";
 import User from "../models/user.model.js";
 import dotenv from "dotenv";
 dotenv.config();
+
+//@desc : Configure Google OAuth 2.0 strategy
 passport.use(
   new GoogleStrategy(
     {
@@ -11,7 +13,7 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: `${process.env.BACKEND_URL}/api/oauth/google/callback`,
     },
-    async (_, __, profile, done) => {
+    async (_, __, profile, done) => {     //@why : frist two parameters(__) are for access token and refresh token which we don't use hence denoted by "_"
       const email = profile.emails?.[0]?.value;
       if (!email) return done(new Error("No email"));
 
@@ -31,6 +33,7 @@ passport.use(
   )
 );
 
+//@desc : Configure GitHub OAuth 2.0 strategy
 passport.use(
   new GitHubStrategy(
     {
@@ -39,7 +42,7 @@ passport.use(
       callbackURL: `${process.env.BACKEND_URL}/api/oauth/github/callback`,
       scope: ["user:email"],
     },
-    async (_, __, profile, done) => {
+    async (_, __, profile, done) => {     //@why : frist two _ are for access token and refresh token which we don't use hence denoted by "_"
       const email = profile.emails?.[0]?.value;
       if (!email) return done(new Error("No email"));
 

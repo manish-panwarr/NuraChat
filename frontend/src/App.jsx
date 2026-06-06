@@ -9,8 +9,15 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
+import CallPage from "./pages/call/CallPage";
+import IncomingCallOverlay from "./components/call/IncomingCallOverlay";
+import TempModeOverlay from "./components/chat/TempModeOverlay";
+import GlobalSocketManager from "./components/call/GlobalSocketManager";
+import OngoingCallBanner from "./components/call/OngoingCallBanner";
+import useAuthStore from "./store/authStore";
+import useCallStore from "./store/callStore";
+import { useEffect } from "react";
 
-// Auth layout with gradient background
 const AuthLayout = ({ children }) => (
   <div className="flex justify-center items-center min-h-screen bg-neura w-full text-left">
     {children}
@@ -18,6 +25,53 @@ const AuthLayout = ({ children }) => (
 );
 
 function App() {
+  const user = useAuthStore((s) => s.user);
+  const restoreAttemptedRef = React.useRef(false);
+
+  useEffect(() => {
+    if (!user) return;
+    if (restoreAttemptedRef.current) return;
+    const savedSession = sessionStorage.getItem("active_call_session");
+    const activeRoom = useCallStore.getState().activeRoom;
+    if (savedSession && !activeRoom) {
+      restoreAttemptedRef.current = true;
+      try {
+        const session = JSON.parse(savedSession);
+        console.log("[App] Restoring call session from storage:", session);
+
+        const restoreSession = async () => {
+          try {
+            const livekitUrl = import.meta.env.VITE_LIVEKIT_URL;
+            const { getLiveKitToken } = await import("./services/livekitService");
+            const data = await getLiveKitToken(session.roomName);
+
+            await useCallStore.getState().initCallRoom(
+              session.roomName,
+              data.token,
+              livekitUrl,
+              session.type,
+              session.peerId,
+              session.peerName,
+              session.isGroup,
+              session.startTime
+            );
+            console.log("[App] Call session restored successfully.");
+          } catch (err) {
+            console.error("[App] Failed to restore call session:", err);
+            sessionStorage.removeItem("active_call_session");
+            useCallStore.getState().resetCallState();
+            restoreAttemptedRef.current = false;
+          }
+        };
+
+        restoreSession();
+      } catch (e) {
+        console.error("[App] Parsing saved call session failed:", e);
+        restoreAttemptedRef.current = false;
+      }
+    }
+  }, [user]);
+
   return (
     <div className="w-full min-h-screen">
       <Toaster
@@ -35,6 +89,10 @@ function App() {
         }}
       />
       <Router>
+        <GlobalSocketManager />
+        <IncomingCallOverlay />
+        <TempModeOverlay />
+        <OngoingCallBanner />
         <Routes>
           {/* Protected Dashboard Routes */}
           <Route
@@ -50,6 +108,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/call"
+            element={
+              <ProtectedRoute>
+                <CallPage />
               </ProtectedRoute>
             }
           />

@@ -5,9 +5,6 @@ import { deleteMultipleFromCloudinary } from "./cloudinary.service.js";
 
 const POPULATE_FIELDS = "firstName lastName email profileImage isOnline lastSeen statusText";
 
-/**
- * Find an existing chat between two users or create a new one
- */
 export const findOrCreateChat = async (userId, participantId) => {
     if (participantId === userId.toString()) {
         throw new Error("Cannot create chat with yourself");
@@ -22,7 +19,6 @@ export const findOrCreateChat = async (userId, participantId) => {
 
     const participants = [userId, participantObjectId];
 
-    // Check if chat already exists
     const existing = await Chat.findOne({
         participants: { $all: participants, $size: 2 },
     })
@@ -40,24 +36,15 @@ export const findOrCreateChat = async (userId, participantId) => {
     return { chat: populated, created: true };
 };
 
-/**
- * Get all chats for a user, sorted by most recent
- */
+// @desc : get user chats
 export const getUserChats = async (userId) => {
-    return Chat.find({ participants: userId })
+    return Chat.find({ participants: userId, deletedFor: { $ne: userId } })
         .populate("participants", POPULATE_FIELDS)
         .populate("lastMessageId")
         .sort({ updatedAt: -1 });
 };
 
-/**
- * Delete a chat with full Cloudinary media cleanup
- * 1. Find all messages with media
- * 2. Extract Cloudinary public IDs
- * 3. Batch delete from Cloudinary
- * 4. Delete all messages
- * 5. Delete the chat
- */
+//@desc : delete chat with cleanup
 export const deleteChatWithCleanup = async (chatId, userId) => {
     const chat = await Chat.findById(chatId);
     if (!chat) throw new Error("Chat not found");
@@ -67,13 +54,10 @@ export const deleteChatWithCleanup = async (chatId, userId) => {
     );
     if (!isParticipant) throw new Error("Access denied");
 
-    // Find all messages with Cloudinary media
     const mediaMessages = await Message.find({
         chatId,
         cloudinaryPublicId: { $ne: null },
     });
-
-    // Batch delete from Cloudinary
     if (mediaMessages.length > 0) {
         const items = mediaMessages.map((msg) => ({
             publicId: msg.cloudinaryPublicId,
@@ -84,23 +68,17 @@ export const deleteChatWithCleanup = async (chatId, userId) => {
             await deleteMultipleFromCloudinary(items);
         } catch (err) {
             console.error("Cloudinary batch cleanup error:", err);
-            // Continue with deletion even if Cloudinary cleanup fails
         }
     }
 
-    // Delete all messages in this chat
     await Message.deleteMany({ chatId });
 
-    // Delete the chat document
     await Chat.findByIdAndDelete(chatId);
 
     return { deletedMediaCount: mediaMessages.length };
 };
 
-/**
- * Delete chat "for me" — adds userId to deletedFor on all messages
- * The chat itself remains, messages still exist but are hidden for this user
- */
+//@desc : delete chat for me
 export const deleteChatForMe = async (chatId, userId) => {
     const chat = await Chat.findById(chatId);
     if (!chat) throw new Error("Chat not found");
@@ -110,7 +88,8 @@ export const deleteChatForMe = async (chatId, userId) => {
     );
     if (!isParticipant) throw new Error("Access denied");
 
-    // Add userId to deletedFor on all messages in this chat
+    await Chat.findByIdAndUpdate(chatId, { $addToSet: { deletedFor: userId } });
+
     await Message.updateMany(
         { chatId, deletedFor: { $ne: userId } },
         { $addToSet: { deletedFor: userId } }

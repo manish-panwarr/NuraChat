@@ -4,8 +4,10 @@ const sizeMap = {
     xs: { width: 32, height: 32, text: "text-[10px]" },
     sm: { width: 40, height: 40, text: "text-[11px]" },
     md: { width: 44, height: 44, text: "text-[12px]" },
+    mdp: { width: 50, height: 50, text: "text-[12px]" },
     lg: { width: 56, height: 56, text: "text-[16px]" },
     xl: { width: 80, height: 80, text: "text-[22px]" },
+    xll: { width: 100, height: 100, text: "text-[22px]" },
 };
 
 const dotSizeMap = {
@@ -24,7 +26,6 @@ const radiusMap = {
     xl: 18,
 };
 
-// Generate consistent color from name
 const getInitialColor = (name) => {
     const colors = [
         "#6366f1", // indigo
@@ -59,7 +60,6 @@ const Avatar = ({ src, name = "", isOnline, size = "md", className = "" }) => {
     const dotInfo = dotSizeMap[size] || dotSizeMap.md;
     const borderRadius = radiusMap[size] || radiusMap.md;
 
-    // Reset error if src changes
     React.useEffect(() => { setImgError(false); }, [src]);
 
     const hasValidImage = src && src.trim() !== "" && !imgError;

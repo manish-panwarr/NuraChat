@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendOtpEmail = async (to, otp, title) => {
   await transporter.sendMail({
-    from: `"NeuraChat" <${process.env.EMAIL_USER}>`,
+    from: `"ꍟ꒒ꀤꂦ" <${process.env.EMAIL_USER}>`,
     to,
     subject: title,
     html: `
@@ -40,7 +40,7 @@ export const sendOtpEmail = async (to, otp, title) => {
       font-size: 34px;
       font-weight: 700;
       letter-spacing: 1px;
-    ">NeuraChat</h1>
+    ">ꍟ꒒ꀤꂦ</h1>
     <p style="
       margin-top: 6px;
       font-size: 16px;
@@ -83,7 +83,7 @@ export const sendOtpEmail = async (to, otp, title) => {
 
     <div style="margin-top: 30px;">
       <img src="https://imglink.io/i/6e97a703-94e2-4899-9677-ec6988615933.jpg" 
-           alt="NeuraChat Banner"
+           alt="ꍟ꒒ꀤꂦ Banner"
            style="width: 100%; border-radius: 10px;">
     </div>
   </div>
@@ -97,7 +97,7 @@ export const sendOtpEmail = async (to, otp, title) => {
     color: #777777;
     border-top: 1px solid #eee;
   ">
-    &copy; ${new Date().getFullYear()} <b>NeuraChat</b>. All rights reserved.<br>
+    &copy; ${new Date().getFullYear()} <b>ꍟ꒒ꀤꂦ</b>. All rights reserved.<br>
     <span style="font-size: 11px;">A M_Creation Product</span>
   </div>
 </div>

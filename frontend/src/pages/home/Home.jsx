@@ -13,7 +13,6 @@ import useAuthStore from "../../store/authStore";
 import useChatStore from "../../store/chatStore";
 import useUiStore from "../../store/uiStore";
 import useGroupStore from "../../store/groupStore";
-import socketService from "../../services/socketService";
 import { MessageSquare } from "lucide-react";
 
 /* ─── Drag-to-resize handle ─── */
@@ -55,7 +54,7 @@ function Home() {
   const selectedPrivateChat = useChatStore((s) => s.selectedChat);
   const selectedGroupChat = useGroupStore((s) => s.selectedGroup);
   const sidebarTab = useUiStore((s) => s.sidebarTab);
-  
+
   const showProfilePanel = useUiStore((s) => s.showProfilePanel);
   const setShowProfilePanel = useUiStore((s) => s.setShowProfilePanel);
   const isMobileChatOpen = useUiStore((s) => s.isMobileChatOpen);
@@ -71,10 +70,7 @@ function Home() {
   useEffect(() => {
     if (!user) {
       navigate("/login");
-      return;
     }
-    socketService.connect(user._id);
-    return () => socketService.disconnect();
   }, [user, navigate]);
 
   // Auto-show profile panel when a chat/group is selected (xl+ screens)
@@ -94,7 +90,7 @@ function Home() {
     if (!container) return;
     const rect = container.getBoundingClientRect();
     const newWidth = clientX - rect.left;
-    const clamped = Math.max(260, Math.min(newWidth, rect.width * 0.4));
+    const clamped = Math.max(260, Math.min(newWidth, rect.width * 0.22));
     setSidebarWidth(clamped);
   }, []);
 
@@ -104,7 +100,7 @@ function Home() {
     if (!container) return;
     const rect = container.getBoundingClientRect();
     const newWidth = rect.right - clientX;
-    const clamped = Math.max(240, Math.min(newWidth, rect.width * 0.35));
+    const clamped = Math.max(240, Math.min(newWidth, rect.width * 0.23));
     setProfileWidth(clamped);
   }, []);
 
@@ -121,22 +117,21 @@ function Home() {
   const showProfile = showProfilePanel && hasActiveChat && window.innerWidth >= 1280;
 
   return (
-    <div className="h-screen flex flex-col font-sans transition-colors duration-300"
-         style={{ background: 'var(--bg-color)' }}>
+    <div className="h-[100dvh] flex flex-col font-sans transition-colors duration-300"
+      style={{ background: 'var(--bg-color)' }}>
       <Navbar />
       <StatusStrip />
 
-      {/* 3-Panel Chat Area */}
-      <main className="flex-1 min-h-0 p-2 md:p-3">
+      <main className="flex-1 min-h-0 p-0 md:p-3">
 
         {/* ── Mobile Layout ── */}
         <div className="h-full md:hidden">
           {!isMobileChatOpen ? (
-            <div className="h-full panel-glass overflow-hidden">
+            <div className="h-full overflow-hidden flex flex-col" style={{ background: 'var(--panel-bg)' }}>
               {sidebarTab === "private" ? <Sidebar /> : <GroupSidebar />}
             </div>
           ) : (
-            <div className="h-full panel-glass overflow-hidden">
+            <div className="h-full overflow-hidden flex flex-col" style={{ background: 'var(--panel-bg)' }}>
               {sidebarTab === "private" && selectedPrivateChat && <ChatWindow />}
               {sidebarTab === "group" && selectedGroupChat && <GroupChatWindow />}
             </div>
@@ -163,19 +158,19 @@ function Home() {
               sidebarTab === "private" ? <ChatWindow /> : <GroupChatWindow />
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden"
-                   style={{ background: 'var(--panel-bg)' }}>
+                style={{ background: 'var(--panel-bg)' }}>
                 <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
-                     style={{
-                       backgroundImage: `url('data:image/svg+xml;utf8,<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="1" fill="%23666"/></svg>')`,
-                       backgroundSize: '24px 24px'
-                     }} />
+                  style={{
+                    backgroundImage: `url('data:image/svg+xml;utf8,<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="1" fill="%23666"/></svg>')`,
+                    backgroundSize: '24px 24px'
+                  }} />
                 <div className="relative z-10 flex flex-col items-center animate-fade-in-up">
                   <div className="w-20 h-20 mb-5 rounded-2xl flex items-center justify-center shadow-sm"
-                       style={{ background: '#f0f7f5' }}>
+                    style={{ background: '#f0f7f5' }}>
                     <MessageSquare size={36} strokeWidth={1.5} className="text-teal-500" />
                   </div>
                   <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 font-display">
-                    NuraChat Web
+                    ꍟ꒒ꀤꂦ Web
                   </h2>
                   <p className="text-sm text-gray-400 max-w-xs text-center leading-relaxed">
                     Select a contact to open a conversation or search for someone new to start chatting.
@@ -201,9 +196,9 @@ function Home() {
       </main>
 
       {/* Global Modals */}
-      <CreateGroupModal 
-        isOpen={isCreateGroupOpen} 
-        onClose={() => setIsCreateGroupOpen(false)} 
+      <CreateGroupModal
+        isOpen={isCreateGroupOpen}
+        onClose={() => setIsCreateGroupOpen(false)}
       />
     </div>
   );

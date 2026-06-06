@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
 
-// Load environment variables
+//@desc : Configration for cloudinary for the cloud storage of profile pictures
 dotenv.config();
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

@@ -8,12 +8,10 @@ const ProtectedRoute = ({ children }) => {
     const [hasHydrated, setHasHydrated] = useState(false);
 
     useEffect(() => {
-        // Wait for Zustand persist to rehydrate from localStorage
         const unsub = useAuthStore.persist.onFinishHydration(() => {
             setHasHydrated(true);
         });
 
-        // If already hydrated (e.g., navigating between pages), set immediately
         if (useAuthStore.persist.hasHydrated()) {
             setHasHydrated(true);
         }
@@ -23,7 +21,6 @@ const ProtectedRoute = ({ children }) => {
         };
     }, []);
 
-    // Show nothing while Zustand is rehydrating from localStorage
     if (!hasHydrated) {
         return (
             <div className="flex justify-center items-center h-screen">

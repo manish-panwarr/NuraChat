@@ -15,14 +15,19 @@ import groupMessageRoutes from "./routes/groupMessage.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import oauthRoutes from "./routes/oauth.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import livekitRoutes from "./routes/livekit.routes.js";
+import translationRoutes from "./routes/translation.routes.js";
 
 const app = express();
 
-// CORS configuration
+// Trust the first proxy (e.g. ngrok, Render, Heroku) to allow express-rate-limit to get correct IP
+app.set("trust proxy", 1);
+
+
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
-// List of allowed origins
 const allowedOrigins = [
+  'https://crest-convinced-guest-spam.trycloudflare.com',
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:5174',
@@ -33,20 +38,22 @@ const allowedOrigins = [
   'http://127.0.0.1:8080',
 ];
 
+if (process.env.FRONTEND_URL) {
+  // Normalize and add the frontend URL
+  allowedOrigins.push(process.env.FRONTEND_URL.replace(/\/$/, ""));
+}
+
 const corsOptions = {
   origin: function (origin, callback) {
     try {
-      // Allow requests with no origin (like mobile apps, curl, or file:// protocol)
       if (!origin) {
         return callback(null, true);
       }
 
-      // In development, allow all origins for easier testing
-      if (isDevelopment) {
+      const isNgrok = origin.includes('ngrok-free.app') || origin.includes('ngrok.io');
+      if (isDevelopment || isNgrok) {
         return callback(null, true);
       }
-
-      // In production, restrict to allowed origins only
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -56,9 +63,9 @@ const corsOptions = {
       callback(error);
     }
   },
-  credentials: true, // Allow cookies and authorization headers
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'ngrok-skip-browser-warning'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
 };
 
@@ -79,21 +86,19 @@ app.use((req, res, next) => {
 
 // Rate Limiting
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Limit each IP to 1000 requests per window
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
   message: "Too many requests from this IP, please try again after 15 minutes",
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use("/api/", apiLimiter);
 
-// Serve static files from uploads directory
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-// Initialize Passport
 app.use(passport.initialize());
 
-// 🔥 ROUTES
+//@desc : ROUTES
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/oauth", oauthRoutes);
@@ -103,18 +108,20 @@ app.use("/api/groups", groupRoutes);
 app.use("/api/group-members", groupMemberRoutes);
 app.use("/api/group-messages", groupMessageRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/livekit", livekitRoutes);
+app.use("/api/translation", translationRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
   res.send("API WORKING");
 });
 
-// 404 handler
+//@desc : 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-// Global error handler (Express 5 compatible)
+//@desc : Global error handler (Express 5 compatible)
 app.use((err, req, res, next) => {
   console.error("Global Error:", err.message);
   const statusCode = err.statusCode || 500;

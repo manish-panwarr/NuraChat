@@ -2,20 +2,16 @@ import OTP from "../models/otp.model.js";
 import bcrypt from "bcryptjs";
 import { sendOtpEmail } from "./email.js"; // Needs to be checked where this is located
 
-// Generates a 6 digit numeric OTP
 export const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Sends OTP and saves to DB
+
 export const sendAndSaveOtp = async (email, type, data = {}) => {
-    // Check if unexpired OTP exists to apply rate limiting/cooldown
     const existingOtp = await OTP.findOne({ email, type });
     if (existingOtp) {
-        // If it exists and expires in future, wait
         const remainingSeconds = Math.ceil((existingOtp.expiresAt.getTime() - Date.now()) / 1000);
         if (remainingSeconds > 0) {
-            // Only allow resend if older than 1 minute (4 minutes left of 5 minute expiry)
             if (remainingSeconds > 240) {
                 return {
                     success: false,
@@ -23,7 +19,6 @@ export const sendAndSaveOtp = async (email, type, data = {}) => {
                     retryAfter: remainingSeconds - 240
                 };
             } else {
-                // delete old one to send new one
                 await OTP.deleteOne({ _id: existingOtp._id });
             }
         } else {
@@ -34,7 +29,6 @@ export const sendAndSaveOtp = async (email, type, data = {}) => {
     const otp = generateOtp();
     const otpHash = await bcrypt.hash(otp, 10);
 
-    // 5 minutes expiry
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     const otpRecord = new OTP({

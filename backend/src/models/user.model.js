@@ -36,13 +36,13 @@ const userSchema = new mongoose.Schema(
       enum: ["male", "female", "other"],
     },
     profileImage: {
-      type: String,   // profile picture ka URL
+      type: String,
       default: ""
     },
 
     statusText: {
       type: String,
-      default: "Hey team, I'm away from laptop...",
+      default: "Hey team, I'm new on this platform...",
     },
 
     lastSeen: {
@@ -70,7 +70,12 @@ const userSchema = new mongoose.Schema(
         },
         providerUserId: String,
       }
-    ]
+    ],
+
+    translationLanguage: {
+      type: String,
+      default: "Hindi",
+    },
   },
   { timestamps: true }
 );

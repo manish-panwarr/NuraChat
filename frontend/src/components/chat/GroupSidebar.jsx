@@ -37,14 +37,12 @@ const GroupSidebar = () => {
     };
 
     const handleCreateGroup = () => {
-        // We will pop open a CreateGroupModal here
-        // For now, toggle a generic UI store state if needed, or emit event
         window.dispatchEvent(new CustomEvent('open-create-group-modal'));
     };
 
     const filteredGroups = useMemo(() => {
         if (!searchQuery.trim()) return groups;
-        return groups.filter((g) => 
+        return groups.filter((g) =>
             g.groupName.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [groups, searchQuery]);
@@ -70,21 +68,19 @@ const GroupSidebar = () => {
                 <div className="flex bg-gray-100 dark:bg-gray-800/80 p-0.5 rounded-lg w-full">
                     <button
                         onClick={() => setSidebarTab("private")}
-                        className={`flex-1 flex justify-center py-1.5 text-[12px] font-medium rounded-md transition-all ${
-                            sidebarTab === "private"
+                        className={`flex-1 flex justify-center py-1.5 text-[12px] font-medium rounded-md transition-all ${sidebarTab === "private"
                                 ? "bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-400 shadow-sm"
                                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                        }`}
+                            }`}
                     >
                         Private
                     </button>
                     <button
                         onClick={() => setSidebarTab("group")}
-                        className={`flex-1 flex justify-center py-1.5 text-[12px] font-medium rounded-md transition-all ${
-                            sidebarTab === "group"
+                        className={`flex-1 flex justify-center py-1.5 text-[12px] font-medium rounded-md transition-all ${sidebarTab === "group"
                                 ? "bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-400 shadow-sm"
                                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                        }`}
+                            }`}
                     >
                         Groups
                     </button>
@@ -118,7 +114,7 @@ const GroupSidebar = () => {
                         <div className="px-2 flex items-center gap-2 mb-1.5 mt-2">
                             <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">My Groups</span>
                         </div>
-                        
+
                         {filteredGroups.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-14 text-gray-400">
                                 <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-3">
@@ -144,7 +140,6 @@ const GroupSidebar = () => {
     );
 };
 
-/* ----- GroupItem Sub-component ----- */
 const GroupItem = ({ group, isSelected, onSelect }) => {
     return (
         <div
@@ -158,7 +153,6 @@ const GroupItem = ({ group, isSelected, onSelect }) => {
                 src={group.groupAvatar}
                 name={group.groupName}
                 size="md"
-                // Groups can use the rounded square style too, handled by Avatar component default
             />
             <div className="flex-1 min-w-0 pr-2">
                 <div className="flex justify-between items-center mb-0.5">

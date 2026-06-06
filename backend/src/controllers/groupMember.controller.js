@@ -1,11 +1,9 @@
 import GroupMember from "../models/groupMember.model.js";
 import Group from "../models/group.model.js";
 import Notification from "../models/notification.model.js";
-import { getIO, getSocketId } from "../sockets/socket.js";
+import { getIO, getSocketId, emitToUser, emitToGroup } from "../sockets/socket.js";
 
-/**
- * ADD MEMBER TO GROUP (Creates Pending Invite)
- */
+// @desc add member to group
 export const addMember = async (req, res) => {
   const { groupId, userId, role } = req.body;
   const inviterId = req.user._id;
@@ -22,21 +20,26 @@ export const addMember = async (req, res) => {
   }
 
   const group = await Group.findById(groupId);
+  if (!group) return res.status(404).json({ message: "Group not found" });
 
   const member = await GroupMember.create({
     groupId,
     userId,
     role: role || "member",
-    status: "pending",
+    status: "accepted",
     invitedBy: inviterId
   });
 
-  // Create Database Notification
+  await member.populate("userId", "firstName lastName profileImage isOnline");
+
+  // Emit Real-time socket event
+  await emitToGroup(groupId.toString(), "memberAdded", member);
+
   const notification = await Notification.create({
     userId,
     type: "group_invite",
     title: "Group Invitation",
-    body: `You have been invited to join ${group.groupName}`,
+    body: `You have been added to ${group.groupName}`,
     data: { groupId, senderId: inviterId, groupName: group.groupName }
   });
 
@@ -50,12 +53,10 @@ export const addMember = async (req, res) => {
   res.status(201).json(member);
 };
 
-/**
- * ACCEPT INVITE
- */
+// @desc accept invite
 export const acceptInvite = async (req, res) => {
   const { groupId } = req.body;
-  
+
   const member = await GroupMember.findOneAndUpdate(
     { groupId, userId: req.user._id, status: "pending" },
     { status: "accepted" },
@@ -72,23 +73,19 @@ export const acceptInvite = async (req, res) => {
   res.json({ message: "Invitation accepted", member });
 };
 
-/**
- * REJECT INVITE
- */
+// @desc reject invite
 export const rejectInvite = async (req, res) => {
   const { groupId } = req.body;
-  
+
   await GroupMember.findOneAndDelete({ groupId, userId: req.user._id, status: "pending" });
-  
+
   // Delete notification related to this invite
   await Notification.deleteMany({ userId: req.user._id, type: "group_invite", "data.groupId": groupId });
 
   res.json({ message: "Invitation rejected" });
 };
 
-/**
- * GET ALL MEMBERS OF A GROUP
- */
+// @desc get group members
 export const getGroupMembers = async (req, res) => {
   const members = await GroupMember.find({
     groupId: req.params.groupId
@@ -97,52 +94,78 @@ export const getGroupMembers = async (req, res) => {
   res.json(members);
 };
 
-/**
- * UPDATE MEMBER ROLE (creator/admin only)
- */
+// @desc update member role
 export const updateMemberRole = async (req, res) => {
   const { role } = req.body;
-  const memberId = req.params.id; // GroupMember _id
+  const memberId = req.params.id;
+
+  if (!["admin", "member"].includes(role)) {
+    return res.status(400).json({ message: "Invalid role" });
+  }
 
   const targetMember = await GroupMember.findById(memberId);
   if (!targetMember) return res.status(404).json({ message: "Member not found" });
 
-  const inviterMember = await GroupMember.findOne({ groupId: targetMember.groupId, userId: req.user._id });
-  if (!inviterMember || inviterMember.role !== "creator") {
-    // Only creator can promote/demote admins for simplicity right now
-    if (inviterMember?.role !== "admin" || role === "creator") {
-      return res.status(403).json({ message: "Insufficient privileges" });
-    }
+  const requesterMember = await GroupMember.findOne({ groupId: targetMember.groupId, userId: req.user._id });
+  if (!requesterMember || (requesterMember.role !== "creator" && requesterMember.role !== "admin")) {
+    return res.status(403).json({ message: "Only admins or creators can manage roles" });
+  }
+
+  if (targetMember.role === "creator") {
+    return res.status(400).json({ message: "Cannot change the group creator's role" });
+  }
+  if (requesterMember.role === "admin" && targetMember.role === "admin" && role === "member") {
+    return res.status(403).json({ message: "Only the group creator can demote an admin" });
+  }
+
+  if (targetMember.role === role) {
+    return res.json(targetMember);
   }
 
   targetMember.role = role;
   await targetMember.save();
 
+  await targetMember.populate("userId", "firstName lastName profileImage isOnline");
+
+  const event = role === "admin" ? "adminGranted" : "adminRevoked";
+  await emitToGroup(targetMember.groupId.toString(), event, targetMember);
+
   res.json(targetMember);
 };
 
-/**
- * REMOVE MEMBER FROM GROUP / LEAVE GROUP
- */
+// @desc remove member from group / leave group
 export const removeMember = async (req, res) => {
-  const memberId = req.params.id; // GroupMember _id
+  const memberId = req.params.id;
 
   const targetMember = await GroupMember.findById(memberId);
   if (!targetMember) return res.status(404).json({ message: "Member not found" });
 
-  // Self-leave logic -> users can always remove themselves
-  if (targetMember.userId.toString() !== req.user._id.toString()) {
-    // If not self, check if requester is admin/creator
+  const isSelf = targetMember.userId.toString() === req.user._id.toString();
+
+  if (!isSelf) {
     const requester = await GroupMember.findOne({ groupId: targetMember.groupId, userId: req.user._id });
     if (!requester || (requester.role !== "creator" && requester.role !== "admin")) {
       return res.status(403).json({ message: "Only admins can remove members" });
     }
-    // Prevent admin from removing creator
     if (targetMember.role === "creator") {
-        return res.status(403).json({ message: "Cannot remove creator" });
+      return res.status(403).json({ message: "Cannot remove creator" });
+    }
+    if (requester.role === "admin" && targetMember.role === "admin") {
+      return res.status(403).json({ message: "Only the group creator can remove other admins" });
+    }
+  } else {
+    if (targetMember.role === "creator") {
+      return res.status(400).json({ message: "Creator cannot leave the group. Delete the group instead." });
     }
   }
 
   await GroupMember.findByIdAndDelete(memberId);
-  res.json({ message: "Member removed from group" });
+
+  await emitToGroup(targetMember.groupId.toString(), "memberRemoved", {
+    groupId: targetMember.groupId,
+    memberId: targetMember._id,
+    userId: targetMember.userId
+  });
+
+  res.json({ message: "Member removed from group", memberId: targetMember._id, userId: targetMember.userId });
 };

@@ -1,11 +1,19 @@
-import React, { useMemo, useState } from "react";
-import { X, Image as ImageIcon, Video, FileText, ChevronDown, Mail, Phone } from "lucide-react";
+import React, { useMemo, useState, useCallback } from "react";
+import { X, Image as ImageIcon, Video, FileText, ChevronDown, Mail, Phone, Languages } from "lucide-react";
 import Avatar from "../common/Avatar";
 import useUiStore from "../../store/uiStore";
 import useChatStore from "../../store/chatStore";
 import useAuthStore from "../../store/authStore";
 import { getMediaUrl } from "../../services/chatService";
 import { format } from "date-fns";
+import MediaViewer from "../common/MediaViewer";
+import translationService from "../../services/translationService";
+import { toast } from "react-hot-toast";
+
+const SUPPORTED_LANGUAGES = [
+    "English", "Hindi", "Spanish", "French",
+    "German", "Japanese", "Chinese", "Arabic",
+];
 
 const MediaSection = ({ icon: Icon, label, count, children, defaultOpen = true }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -42,10 +50,14 @@ const MediaSection = ({ icon: Icon, label, count, children, defaultOpen = true }
 
 const UserProfileSidebar = () => {
     const user = useAuthStore((s) => s.user);
+    const updateUser = useAuthStore((s) => s.updateUser);
     const selectedChat = useChatStore((s) => s.selectedChat);
     const messages = useChatStore((s) => s.messages);
     const showProfilePanel = useUiStore((s) => s.showProfilePanel);
     const setShowProfilePanel = useUiStore((s) => s.setShowProfilePanel);
+    const onlineUsers = useChatStore((s) => s.onlineUsers);
+    const [activeMedia, setActiveMedia] = useState(null);
+    const [isUpdatingLang, setIsUpdatingLang] = useState(false);
 
     const otherUser = useMemo(
         () => selectedChat?.participants?.find((p) => p._id !== user?._id) || {},
@@ -88,16 +100,16 @@ const UserProfileSidebar = () => {
                     <Avatar
                         src={otherUser.profileImage}
                         name={`${otherUser.firstName || ""} ${otherUser.lastName || ""}`}
-                        isOnline={otherUser.isOnline}
+                        isOnline={onlineUsers && onlineUsers.has(otherUser._id)}
                         size="xl"
                     />
                     <h3 className="mt-3 text-[16px] font-sm text-gray-800 dark:text-gray-100 font-display">
                         {otherUser.firstName} {otherUser.lastName}
                     </h3>
                     <div className="flex items-center gap-1.5 mt-1">
-                        <span className={`w-2 h-2 rounded-full ${otherUser.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                        <span className={`w-2 h-2 rounded-full ${onlineUsers && onlineUsers.has(otherUser._id) ? 'bg-green-400' : 'bg-gray-400'}`} />
                         <span className="text-[12px] text-gray-500 dark:text-gray-400">
-                            {otherUser.isOnline ? 'Online' : otherUser.lastSeen ? `Last seen ${format(new Date(otherUser.lastSeen), "MMM d, h:mm a")}` : 'Offline'}
+                            {onlineUsers && onlineUsers.has(otherUser._id) ? 'Online' : otherUser.lastSeen ? `Last seen ${format(new Date(otherUser.lastSeen), "MMM d, h:mm a")}` : 'Offline'}
                         </span>
                     </div>
                     {otherUser.statusText && (
@@ -135,6 +147,45 @@ const UserProfileSidebar = () => {
 
                 <div className="h-px w-full bg-gray-100 dark:bg-gray-800/50 mb-4" />
 
+                {/* Translation Settings */}
+                <div className="mb-5">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Languages size={15} className="text-indigo-500" />
+                        <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Translation Language</span>
+                    </div>
+                    <div className="relative">
+                        <select
+                            id="translation-language-select"
+                            value={user?.translationLanguage || "English"}
+                            disabled={isUpdatingLang}
+                            onChange={async (e) => {
+                                const lang = e.target.value;
+                                setIsUpdatingLang(true);
+                                try {
+                                    const result = await translationService.updateTranslationLanguage(lang);
+                                    updateUser({ translationLanguage: lang });
+                                    toast.success(`Translation language set to ${lang}`);
+                                } catch {
+                                    toast.error("Failed to update translation language");
+                                } finally {
+                                    setIsUpdatingLang(false);
+                                }
+                            }}
+                            className="w-full appearance-none bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 pr-8 text-[13px] text-gray-700 dark:text-gray-200 outline-none focus:border-indigo-400 dark:focus:border-indigo-500 transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            {SUPPORTED_LANGUAGES.map((lang) => (
+                                <option key={lang} value={lang}>{lang}</option>
+                            ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-1.5 ml-0.5">
+                        Messages will be translated into {user?.translationLanguage || "English"} when you tap Translate.
+                    </p>
+                </div>
+
+                <div className="h-px w-full bg-gray-100 dark:bg-gray-800/50 mb-4" />
+
                 {/* Shared Media Sections */}
                 <div className="space-y-1">
                     {/* Photos */}
@@ -142,11 +193,20 @@ const UserProfileSidebar = () => {
                         {sharedMedia.length > 0 ? (
                             <div className="grid grid-cols-4 gap-1.5 pt-1 pb-3">
                                 {sharedMedia.slice(0, 8).map((m) => (
-                                    <div key={m._id} className="aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                    <div
+                                        key={m._id}
+                                        className="aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer"
+                                        onClick={() => setActiveMedia({
+                                            url: getMediaUrl(m.mediaUrl),
+                                            type: "image",
+                                            fileName: m.mediaMeta?.originalName || "photo.jpg",
+                                            title: `${m.senderId?._id === user?._id ? "You" : (otherUser?.firstName || "Partner")} · ${m.createdAt ? format(new Date(m.createdAt), "hh:mm a") : ""}`
+                                        })}
+                                    >
                                         <img
                                             src={getMediaUrl(m.mediaUrl)}
                                             alt=""
-                                            className="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
+                                            className="w-full h-full object-cover hover:opacity-90 transition-opacity"
                                             loading="lazy"
                                         />
                                     </div>
@@ -169,7 +229,16 @@ const UserProfileSidebar = () => {
                         {sharedVideos.length > 0 ? (
                             <div className="grid grid-cols-2 gap-1.5 pt-1 pb-3">
                                 {sharedVideos.slice(0, 4).map((m) => (
-                                    <div key={m._id} className="aspect-video rounded-lg overflow-hidden bg-gray-900 relative group cursor-pointer">
+                                    <div
+                                        key={m._id}
+                                        className="aspect-video rounded-lg overflow-hidden bg-gray-900 relative group cursor-pointer"
+                                        onClick={() => setActiveMedia({
+                                            url: getMediaUrl(m.mediaUrl),
+                                            type: "video",
+                                            fileName: m.mediaMeta?.originalName || "video.mp4",
+                                            title: `${m.senderId?._id === user?._id ? "You" : (otherUser?.firstName || "Partner")} · ${m.createdAt ? format(new Date(m.createdAt), "hh:mm a") : ""}`
+                                        })}
+                                    >
                                         <video
                                             src={getMediaUrl(m.mediaUrl)}
                                             preload="metadata"
@@ -233,6 +302,16 @@ const UserProfileSidebar = () => {
                     </MediaSection>
                 </div>
             </div>
+            {activeMedia && (
+                <MediaViewer
+                    isOpen={!!activeMedia}
+                    onClose={() => setActiveMedia(null)}
+                    mediaUrl={activeMedia.url}
+                    mediaType={activeMedia.type}
+                    fileName={activeMedia.fileName}
+                    title={activeMedia.title}
+                />
+            )}
         </div>
     );
 };

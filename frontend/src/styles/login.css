@@ -45,7 +45,7 @@
       }
   }
   
-  @media screen and(max-width : 625px) {
+  @media screen and (max-width : 625px) {
   
        form{
           width: 100%;

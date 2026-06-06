@@ -1,9 +1,8 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import cloudinary from "../config/cloudinary.js";
-/* ===========================
-   CREATE USER (LOCAL SIGNUP)
-=========================== */
+
+//@desc  CREATE USER (LOCAL NO OAuth)
 export const createUser = async (req, res) => {
   try {
     const {
@@ -44,15 +43,12 @@ export const createUser = async (req, res) => {
   }
 };
 
-/* ===========================
-   GET ALL USERS (ADMIN / CHAT)
-=========================== */
+//@desc  GET ALL USERS 
 export const getAllUsers = async (req, res) => {
   try {
     const { search } = req.query;
     let filter = {};
 
-    // Support search by name or email
     if (search && search.trim()) {
       const regex = new RegExp(search.trim(), "i");
       filter = {
@@ -77,33 +73,27 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-/* ===========================
-   GET RANDOM USERS (DISCOVERY)
-=========================== */
+//@desc  GET RANDOM USERS 
 export const getRandomUsers = async (req, res) => {
   try {
     const count = parseInt(req.query.count) || 7;
-    
-    // Aggregation pipeline to get random users excluding current user
+
     const users = await User.aggregate([
       { $match: { _id: { $ne: req.user._id } } },
       { $sample: { size: count } },
       { $project: { passwordHash: 0, authProvider: 0, providerId: 0 } } // Exclude sensitive fields
     ]);
-    
+
     res.json({ users });
   } catch (error) {
     res.status(500).json({
-      message: "Failed to fetch random users",
+      message: "Failed to fetch users",
       error: error.message,
     });
   }
 };
 
-/* ===========================
-   GET CURRENT LOGGED-IN USER
-   (USED BY /api/users/me)
-=========================== */
+//@desc  GET CURRENT LOGGED-IN USER
 export const getCurrentUser = async (req, res) => {
   try {
     if (!req.user) {
@@ -112,8 +102,7 @@ export const getCurrentUser = async (req, res) => {
 
     const safeUser = req.user.toObject();
     delete safeUser.passwordHash;
-    
-    // Add flag so frontend knows if password is set
+
     safeUser.hasPassword = !!req.user.passwordHash;
 
     res.json({ user: safeUser });
@@ -125,9 +114,7 @@ export const getCurrentUser = async (req, res) => {
   }
 };
 
-/* ===========================
-   GET USER BY ID
-=========================== */
+//@desc GET USER BY ID
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-passwordHash");
@@ -143,14 +130,10 @@ export const getUserById = async (req, res) => {
   }
 };
 
-/* ===========================
-   UPDATE USER (SELF / ADMIN)
-=========================== */
+//@desc UPDATE USER 
 export const updateUser = async (req, res) => {
   try {
     const updates = { ...req.body };
-
-    // ❌ Never allow password update here
     delete updates.passwordHash;
     delete updates.authProvider;
     delete updates.providerId;
@@ -174,9 +157,7 @@ export const updateUser = async (req, res) => {
   }
 };
 
-/* ===========================
-   DELETE USER
-=========================== */
+//@desc DELETE USER 
 export const deleteUser = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -195,9 +176,7 @@ export const deleteUser = async (req, res) => {
 };
 
 
-
-// controllers/user.controller.js
-
+//@desc update my profile
 export const updateMyProfile = async (req, res) => {
   try {
     const allowedFields = [
@@ -208,7 +187,8 @@ export const updateMyProfile = async (req, res) => {
       "gender",
       "mobileNumber",
       "profileImage",
-      "statusText"
+      "statusText",
+      "translationLanguage",
     ];
 
     const updates = {};
@@ -235,8 +215,7 @@ export const updateMyProfile = async (req, res) => {
 };
 
 
-// changepass 
-
+//@desc change password
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -265,16 +244,12 @@ export const changePassword = async (req, res) => {
   }
 };
 
-/* ===========================
-   UPLOAD AVATAR TO CLOUDINARY
-=========================== */
+//@desc UPLOAD AVATAR  to Cloudinary
 export const uploadAvatar = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No image file provided" });
     }
-
-    // Upload buffer to Cloudinary (memoryStorage — no req.file.path)
     const uploadResult = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {

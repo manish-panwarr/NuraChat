@@ -47,12 +47,21 @@ const groupService = {
     const res = await api.delete(`/group-members/${memberId}`);
     return res.data;
   },
-  
+
+  uploadGroupAvatar: async (groupId, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await api.post(`/groups/upload-avatar/${groupId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    return res.data;
+  },
+
   acceptInvite: async (groupId) => {
     const res = await api.post("/group-members/accept", { groupId });
     return res.data;
   },
-  
+
   rejectInvite: async (groupId) => {
     const res = await api.post("/group-members/reject", { groupId });
     return res.data;

@@ -9,21 +9,17 @@ const SkeletonLoader = ({ type = "chat-list", count = 5 }) => {
             <div className="space-y-3 p-2">
                 {Array.from({ length: count }).map((_, i) => (
                     <div key={i} className="flex items-center gap-3 p-3 rounded-xl">
-                        {/* Avatar */}
                         <div
                             className={`w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 ${shimmer}`}
                         />
                         <div className="flex-1 space-y-2">
-                            {/* Name */}
                             <div
                                 className={`h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700 ${shimmer}`}
                             />
-                            {/* Last message */}
                             <div
                                 className={`h-3 w-1/2 rounded bg-gray-100 dark:bg-gray-800 ${shimmer}`}
                             />
                         </div>
-                        {/* Time */}
                         <div
                             className={`h-3 w-10 rounded bg-gray-100 dark:bg-gray-800 ${shimmer}`}
                         />
@@ -45,8 +41,8 @@ const SkeletonLoader = ({ type = "chat-list", count = 5 }) => {
                         >
                             <div
                                 className={`rounded-2xl p-4 ${shimmer} ${isRight
-                                        ? "bg-indigo-100 dark:bg-indigo-900/30"
-                                        : "bg-gray-100 dark:bg-gray-800"
+                                    ? "bg-indigo-100 dark:bg-indigo-900/30"
+                                    : "bg-gray-100 dark:bg-gray-800"
                                     }`}
                                 style={{
                                     width: `${Math.random() * 30 + 20}%`,

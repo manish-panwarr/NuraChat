@@ -4,9 +4,7 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-/* ===========================
-   COMMON SUCCESS HANDLER
-=========================== */
+//@desc : outh success handler
 const oauthSuccessHandler = (req, res) => {
   try {
     const user = req.user;
@@ -37,9 +35,7 @@ const oauthSuccessHandler = (req, res) => {
   }
 };
 
-/* ===========================
-   GOOGLE OAUTH
-=========================== */
+//@desc : google oauth
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
@@ -54,9 +50,7 @@ router.get(
   oauthSuccessHandler
 );
 
-/* ===========================
-   FACEBOOK OAUTH
-=========================== */
+//@todo : facebook oauth
 // router.get(
 //   "/facebook",
 //   passport.authenticate("facebook", { scope: ["email"] })
@@ -71,9 +65,7 @@ router.get(
 //   oauthSuccessHandler
 // );
 
-/* ===========================
-   GITHUB OAUTH
-=========================== */
+//@desc : github oauth
 router.get(
   "/github",
   passport.authenticate("github", { scope: ["user:email"] })

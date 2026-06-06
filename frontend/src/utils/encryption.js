@@ -1,13 +1,11 @@
-// Web Crypto API based E2EE Utility (AES-GCM)
-
-// Helper: Convert string to Uint8Array
+// Web Crypto API based E2EE Utility (AES-GCM) | Helper: Convert string to Uint8Array
 const strToUint8Array = (str) => new TextEncoder().encode(str);
 
 // Helper: Convert Uint8Array to string
 const uint8ArrayToStr = (buffer) => new TextDecoder().decode(buffer);
 
 // Default key for demonstration if user keys not set up (In prod, derive from user secrets)
-const DEMO_KEY_RAW = "12345678901234567890123456789012";
+const DEMO_KEY_RAW = import.meta.env.VITE_ENCRYPTION_KEY;
 
 // Import key into Web Crypto API
 const getCryptoKey = async () => {
@@ -53,14 +51,13 @@ export const encryptMessage = async (text) => {
 export const decryptMessage = async (encryptedData) => {
   if (!encryptedData) return "";
   if (encryptedData.startsWith("ENC_")) {
-    // Legacy base64 support during migration
     try {
       return atob(encryptedData.substring(4));
     } catch { return "**Decryption Failed**"; }
   }
 
   if (!encryptedData.startsWith("E2E_")) {
-    return encryptedData; // Unencrypted fallback
+    return encryptedData;
   }
 
   try {

@@ -1,8 +1,7 @@
-// backend/routes/auth.routes.js
 import express from "express";
 import {
   login,
-  registerInit, 
+  registerInit,
   verifyOtp,
   sendForgotOtp,
   resetPassword,
@@ -13,29 +12,36 @@ import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// Apply rate limiter to all auth routes
-router.use(authLimiter);
+router.use(authLimiter);     // Apply rate limiter to all auth routes
 
-/* ===========================
-   AUTH ROUTES (PUBLIC)
-=========================== */
-
-// Login with email/password
+//@desc : Login user
+//@route : POST /api/auth/login
+//@access : Public
 router.post("/login", login);
 
-// Register new user
+//@desc : Register user
+//@route : POST /api/auth/register-init
+//@access : Public
 router.post("/register-init", registerInit);
 
-// Verify OTP after register
+//@desc : Verify OTP after register
+//@route : POST /api/auth/verify-otp
+//@access : Public
 router.post("/verify-otp", verifyOtp);
 
-// Forgot password - send OTP
+//@desc : Forgot password - send OTP
+//@route : POST /api/auth/forgot
+//@access : Public
 router.post("/forgot", sendForgotOtp);
 
-// Reset password using OTP
+//@desc : Reset password using OTP
+//@route : POST /api/auth/reset-password
+//@access : Public
 router.post("/reset-password", resetPassword);
 
-// Set password (Authenticated users - e.g. OAuth)
+//@desc : Set password (Authenticated users - e.g. OAuth)
+//@route : POST /api/auth/set-password
+//@access : Private
 router.post("/set-password", authenticate, setPassword);
 
 export default router;

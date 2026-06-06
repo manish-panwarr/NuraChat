@@ -132,7 +132,7 @@ const ProfilePage = () => {
                 >
                     <ArrowLeft size={18} />
                 </button>
-                <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100 font-display">My Profile</h1>
+                <h1 className="text-lg font-semibold text-gray-500 dark:text-gray-100 font-display">My Profile</h1>
             </div>
 
             {/* Content */}
@@ -143,8 +143,8 @@ const ProfilePage = () => {
                         {/* Avatar section */}
                         <div className="flex flex-col items-center mb-8">
                             <div className="relative group">
-                                <Avatar src={user.profileImage} name={`${user.firstName} ${user.lastName}`} size="xl" />
-                                <div 
+                                <Avatar src={user.profileImage} name={`${user.firstName} ${user.lastName}`} size="xll" />
+                                <div
                                     onClick={handleAvatarClick}
                                     className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center cursor-pointer"
                                 >
@@ -154,12 +154,12 @@ const ProfilePage = () => {
                                         <Camera size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                                     )}
                                 </div>
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    onChange={handleFileChange} 
-                                    accept="image/*" 
-                                    className="hidden" 
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                    accept="image/*"
+                                    className="hidden"
                                 />
                             </div>
                             <h2 className="mt-4 text-xl font-bold text-gray-800 dark:text-gray-100 font-display">
@@ -190,30 +190,44 @@ const ProfilePage = () => {
                         ) : (
                             <div className="space-y-4">
                                 {[
-                                    { key: "firstName", label: "First Name", type: "text" },
-                                    { key: "lastName", label: "Last Name", type: "text" },
-                                    { key: "username", label: "Username", type: "text" },
-                                    { key: "mobileNumber", label: "Mobile Number", type: "tel" },
+                                    { key: "firstName", label: "First Name", type: "text", maxLength: 50 },
+                                    { key: "lastName", label: "Last Name", type: "text", maxLength: 50 },
+                                    { key: "username", label: "Username", type: "text", maxLength: 30 },
+                                    { key: "mobileNumber", label: "Mobile Number", type: "tel", maxLength: 10, pattern: /^[0-9]*$/ },
+                                    { key: "email", label: "Email", type: "email", maxLength: 100, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
                                     { key: "dob", label: "Date of Birth", type: "date" },
-                                    { key: "statusText", label: "Status", type: "text" },
-                                ].map(({ key, label, type }) => (
+                                    { key: "statusText", label: "Status", type: "text", maxLength: 100 },
+                                ].map(({ key, label, type, maxLength, pattern }) => (
                                     <div key={key}>
-                                        <label className="text-[11px] text-gray-400 uppercase tracking-wider font-medium block mb-1">{label}</label>
+                                        <label className="text-[11px] text-gray-400 uppercase tracking-wider font-medium block mb-1">
+                                            {label}
+                                        </label>
                                         <input
                                             type={type}
                                             value={form[key]}
-                                            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                                            maxLength={maxLength}
+                                            onChange={(e) => {
+                                                let value = e.target.value;
+                                                // If pattern exists, only allow matching characters
+                                                if (pattern) {
+                                                    const regex = new RegExp(pattern);
+                                                    if (!regex.test(value) && value !== "") return;
+                                                }
+                                                setForm({ ...form, [key]: value });
+                                            }}
                                             className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[13px] text-gray-700 dark:text-gray-200 outline-none focus:border-teal-400 transition-colors"
                                         />
                                     </div>
                                 ))}
 
-                                <div>
-                                    <label className="text-[11px] text-gray-400 uppercase tracking-wider font-medium block mb-1">Gender</label>
+                                <div className="">
+                                    <label className="text-[11px] text-gray-400 uppercase tracking-wider font-medium block mb-1">
+                                        Gender
+                                    </label>
                                     <select
                                         value={form.gender}
                                         onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[13px] text-gray-700 dark:text-gray-200 outline-none focus:border-teal-400 transition-colors"
+                                        className="w-full  px-4 py-2.5  rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[13px] text-gray-700 dark:text-gray-200 outline-none focus:border-teal-400 transition-colors "
                                     >
                                         <option value="">Select</option>
                                         <option value="male">Male</option>

@@ -15,13 +15,13 @@ const SubHeader = () => {
     };
 
     return (
-        <div className="flex items-center justify-between px-8 py-2 mb-6">
+        <div className="flex items-center justify-between px-8 py-3 mb-6">
             {/* Left: Tabs */}
             <div className="flex bg-gray-200 dark:bg-gray-800 rounded-full p-1">
-                <button className="px-6 py-2 bg-white dark:bg-gray-700 rounded-full shadow-sm text-sm font-semibold text-gray-800 dark:text-white transition">
+                <button className="px-6 py-2 bg-white dark:bg-gray-700 rounded-full shadow-sm text-[12px] font-semibold text-gray-800 dark:text-white transition">
                     Public Messages
                 </button>
-                <button className="px-6 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition">
+                <button className="px-6 py-2 text-[12px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition">
                     Private Messages
                 </button>
             </div>

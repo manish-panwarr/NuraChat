@@ -1,9 +1,7 @@
 import useUiStore from "../store/uiStore";
 
-/**
- * Theme hook wrapping Zustand UI store.
- * Initializes theme on mount and provides toggle function.
- */
+// @desc : Theme hook wrapping Zustand UI store.
+// Initializes theme on mount and provides toggle function.
 export default function useTheme() {
   const theme = useUiStore((s) => s.theme);
   const toggleTheme = useUiStore((s) => s.toggleTheme);

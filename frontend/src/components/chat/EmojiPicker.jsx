@@ -8,9 +8,9 @@ const EmojiPicker = ({ onSelect, onClose }) => {
     return (
         <div className="relative">
             {/* Backdrop to close */}
-            <div className="fixed inset-0 z-40" onClick={onClose} />
+            <div className="fixed inset-0 z-40 relative" onClick={onClose} />
 
-            <div className="relative z-50 rounded-2xl overflow-hidden shadow-2xl">
+            <div className=" z-50 rounded-2xl overflow-hidden shadow-2xl ">
                 <EmojiPickerReact
                     onEmojiClick={(emojiData) => onSelect(emojiData.emoji)}
                     theme={theme === "dark" ? "dark" : "light"}

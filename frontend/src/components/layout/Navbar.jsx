@@ -13,18 +13,16 @@ const Navbar = () => {
     const navigate = useNavigate();
     const logout = useAuthStore((s) => s.logout);
     const user = useAuthStore((s) => s.user);
-    
-    // Replace old chatStore notifications with new notificationStore
+
     const notifications = useNotificationStore((s) => s.notifications);
     const unreadCount = useNotificationStore((s) => s.unreadCount);
     const clearAll = useNotificationStore((s) => s.clearAll);
     const markAsRead = useNotificationStore((s) => s.markAsRead);
     const removeNotification = useNotificationStore((s) => s.removeNotification);
-    
+
     const [showNotifications, setShowNotifications] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-    // Call fetchNotifications on mount
     React.useEffect(() => {
         if (user) {
             useNotificationStore.getState().fetchNotifications();
@@ -36,8 +34,6 @@ const Navbar = () => {
             await groupService.acceptInvite(notif.data.groupId);
             toast.success(`Joined ${notif.data.groupName}!`);
             removeNotification(notif._id);
-            // We should ideally refetch groups here, let's trigger it if groupStore is mounted
-            // by using an event or just let user navigate to group tab
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to accept invite");
         }
@@ -66,14 +62,14 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className="flex items-center justify-between px-6 py-3.5 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50 transition-colors duration-200">
+            <nav className="flex items-center justify-between px-7 py-2 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50 transition-colors duration-200  ">
                 {/* Logo */}
                 <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white shadow-sm">
+                    {/* <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white shadow-sm">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            width="18"
-                            height="18"
+                            width="20"
+                            height="20"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -83,9 +79,9 @@ const Navbar = () => {
                         >
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
-                    </div>
-                    <h1 className="text-xl font-bold text-teal-600 dark:text-teal-400 tracking-tight font-display">
-                        NuraChat
+                    </div> */}
+                    <h1 className="ml-5  text-2xl font-bold text-teal-400 dark:text-teal-400 tracking-tight font-display cursor-pointer transition-colors duration-200 hover:text-teal-500 dark:hover:text-teal-500 hover:scale-105 ">
+                        ꍟ꒒ꀤꂦ
                     </h1>
                 </div>
 
@@ -97,9 +93,9 @@ const Navbar = () => {
                             <Link
                                 key={link.name}
                                 to={link.path}
-                                className={`px-4 py-1.5 rounded-lg text-[14px] font-medium transition-all duration-200 ${isActive
-                                    ? "text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20"
-                                    : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                className={`px-1 py-1.5 mr-5  rounded-[4px] text-[14px] font-medium transition-all duration-200 ${isActive
+                                    ? "text-teal-600 dark:text-teal-400 bg-teal-50  bg-transparent border-b-1 border-teal-500"
+                                    : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-transparent dark:hover:bg-transparent hover:border-b-[1px] hover:border-teal-200"
                                     }`}
                             >
                                 {link.name}
@@ -113,9 +109,9 @@ const Navbar = () => {
                     <div className="relative">
                         <button
                             onClick={() => setShowNotifications(!showNotifications)}
-                            className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors relative"
+                            className="w-10 h-10 mr-[4px] flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors relative"
                         >
-                            <Bell size={20} />
+                            <Bell size={19} />
                             {unreadCount > 0 && (
                                 <span className="notification-badge">
                                     {unreadCount > 9 ? "9+" : unreadCount}
@@ -190,25 +186,23 @@ const Navbar = () => {
                         )}
                     </div>
 
-                    {/* User avatar */}
                     {user && (
                         <Link to="/profile" className="mr-1">
-                            <Avatar src={user.profileImage} name={`${user.firstName} ${user.lastName}`} size="sm" />
+                            <Avatar src={user.profileImage} name={`${user.firstName} ${user.lastName}`} size="mdp" />
                         </Link>
                     )}
 
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[14px] font-medium text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all duration-200"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[14px] font-medium text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all duration-200"
                     >
                         <span>Log out</span>
-                        <LogOut size={16} />
+                        <LogOut size={20} />
                     </button>
                 </div>
 
                 {/* Mobile menu */}
                 <div className="flex md:hidden items-center gap-2">
-                    {/* Mobile Notification Bell */}
                     <div className="relative">
                         <button
                             onClick={() => setShowNotifications(!showNotifications)}

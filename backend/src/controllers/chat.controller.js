@@ -6,11 +6,7 @@ import {
   deleteChatForMe,
 } from "../services/chat.service.js";
 
-/**
- * CREATE CHAT (1-to-1)
- * Accepts { participantId } from body, uses req.user._id as the other participant.
- * Returns existing chat if one already exists between the two users.
- */
+//@desc CREATE CHAT (1-to-1)
 export const createChat = async (req, res) => {
   const { participantId } = req.body;
   const currentUserId = req.user._id;
@@ -30,17 +26,13 @@ export const createChat = async (req, res) => {
   }
 };
 
-/**
- * GET ALL CHATS for the authenticated user
- */
+//@desc get all chats for the authenicated user
 export const getUserChatsController = async (req, res) => {
   const chats = await getUserChats(req.user._id);
   res.json(chats);
 };
 
-/**
- * GET CHAT BY ID (verify user is participant)
- */
+//@desc get chat by ID (verify user is participant)
 export const getChatById = async (req, res) => {
   const chat = await Chat.findById(req.params.id)
     .populate("participants", "firstName lastName email profileImage isOnline lastSeen statusText")
@@ -59,12 +51,10 @@ export const getChatById = async (req, res) => {
   res.json(chat);
 };
 
-/**
- * DELETE CHAT
- * Query param: ?deleteType=me|everyone
- * "me" — hides messages for this user only
- * "everyone" — deletes chat + messages + media permanently
- */
+// @desc delete chat 
+// @desc: Query param: ?deleteType=me|everyone
+// @desc: "me" — hides messages for this user only
+// @desc: "everyone" — deletes chat + messages + media permanently
 export const deleteChat = async (req, res) => {
   try {
     const deleteType = req.query.deleteType || "everyone";
