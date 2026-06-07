@@ -27,7 +27,7 @@ app.set("trust proxy", 1);
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const allowedOrigins = [
-  'https://crest-convinced-guest-spam.trycloudflare.com',
+  'https://nura-chat-three.vercel.app',
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:5174',
