@@ -60,7 +60,7 @@ export const acceptInvite = async (req, res) => {
   const member = await GroupMember.findOneAndUpdate(
     { groupId, userId: req.user._id, status: "pending" },
     { status: "accepted" },
-    { new: true }
+    { returnDocument: 'after' }
   );
 
   if (!member) {

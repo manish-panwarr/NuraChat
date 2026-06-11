@@ -66,7 +66,7 @@ export const translateMessage = async (req, res) => {
                 targetLanguage: result.targetLanguage,
                 createdAt: new Date(),
             },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         );
 
         return res.json({

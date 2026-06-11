@@ -2,8 +2,12 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
+const originalPort = process.env.PORT;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, ".env") });
+if (originalPort) {
+  process.env.PORT = originalPort;
+}
 
 // Catch unhandled startup errors — prevents silent SIGTERM crash
 process.on("uncaughtException", (err) => {
