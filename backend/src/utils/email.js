@@ -1,29 +1,18 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const getTransporter = () => {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
-
-  if (!user || !pass) {
-    throw new Error(`Email credentials missing. EMAIL_USER=${user ? 'set' : 'MISSING'}, EMAIL_PASS=${pass ? 'set' : 'MISSING'}`);
+const getResend = () => {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not set in environment variables.");
   }
-
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    auth: { user, pass },
-    tls: {
-      rejectUnauthorized: false, // Avoids self-signed cert errors on some cloud providers
-    },
-  });
+  return new Resend(apiKey);
 };
 
 export const sendOtpEmail = async (to, otp, title) => {
-  const transporter = getTransporter();
-  await transporter.sendMail({
-    from: `"ꍟ꒒ꀤꂦ" <${process.env.EMAIL_USER}>`,
+  const resend = getResend();
+
+  await resend.emails.send({
+    from: "NuraChat <onboarding@resend.dev>", // Use this until you verify a domain
     to,
     subject: title,
     html: `
@@ -87,8 +76,8 @@ export const sendOtpEmail = async (to, otp, title) => {
       color: #777777;
       line-height: 1.7;
     ">
-      This code will expire in <b>2 minutes</b>.<br>
-      If you didn’t request this, please ignore this email.
+      This code will expire in <b>5 minutes</b>.<br>
+      If you didn't request this, please ignore this email.
     </p>
 
     <div style="margin-top: 30px;">
