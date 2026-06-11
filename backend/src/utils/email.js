@@ -1,14 +1,21 @@
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const getTransporter = () => {
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+
+  if (!user || !pass) {
+    throw new Error(`Email credentials missing. EMAIL_USER=${user ? 'set' : 'MISSING'}, EMAIL_PASS=${pass ? 'set' : 'MISSING'}`);
+  }
+
   return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    requireTLS: true,
+    auth: { user, pass },
+    tls: {
+      rejectUnauthorized: false, // Avoids self-signed cert errors on some cloud providers
     },
   });
 };

@@ -73,7 +73,7 @@ app.use(express.json());
 
 // Security Middlewares
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
-// Prevent NoSQL Injection attacks securely bypassing Express 5 getter-only req.query issue
+
 app.use((req, res, next) => {
   ['body', 'params', 'headers', 'query'].forEach((key) => {
     if (req[key]) {

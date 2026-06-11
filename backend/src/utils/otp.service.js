@@ -41,9 +41,17 @@ export const sendAndSaveOtp = async (email, type, data = {}) => {
 
     await otpRecord.save();
 
-    // Async email sending
+    // Fire email async — OTP is already saved, so user can still proceed even if email is slow
     sendOtpEmail(email, otp, type === "forgot" ? "Reset Password OTP" : "Verify your account")
-        .catch((err) => console.error("Email sending failed:", err));
+        .catch((err) => {
+            console.error("EMAIL SEND FAILURE");
+            console.error("To:", email, "| Type:", type);
+            console.error("Error:", err.message);
+            console.error("Error code:", err.code);
+            console.error("SMTP response:", err.response);
+            console.error("EMAIL_USER set:", !!process.env.EMAIL_USER);
+            console.error("EMAIL_PASS set:", !!process.env.EMAIL_PASS);
+        });
 
     return { success: true, message: "OTP sent successfully" };
 };
