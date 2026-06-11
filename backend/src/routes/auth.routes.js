@@ -6,6 +6,7 @@ import {
   sendForgotOtp,
   resetPassword,
   setPassword,
+  testEmail,
 } from "../controllers/auth.controller.js";
 import { authLimiter } from "../middlewares/rateLimiter.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
@@ -43,6 +44,11 @@ router.post("/reset-password", resetPassword);
 //@route : POST /api/auth/set-password
 //@access : Private
 router.post("/set-password", authenticate, setPassword);
+
+//@desc : Test email sending config
+//@route : GET /api/auth/test-email
+//@access : Public
+router.get("/test-email", testEmail);
 
 export default router;
 

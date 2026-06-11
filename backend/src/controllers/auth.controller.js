@@ -158,3 +158,20 @@ export const setPassword = async (req, res) => {
     res.status(500).json({ message: "Error setting password" });
   }
 };
+
+import { sendOtpEmail } from "../utils/email.js";
+
+export const testEmail = async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ message: "Email query parameter is required" });
+  try {
+    await sendOtpEmail(email, "123456", "Test Connection OTP");
+    res.json({ success: true, message: "Email sent successfully!" });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      stack: error.stack,
+    });
+  }
+};
