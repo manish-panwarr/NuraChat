@@ -4,6 +4,7 @@ import { FaArrowLeft, FaChevronRight } from "react-icons/fa";
 import SideImage from "./SideImage";
 import axios from "axios";
 import "../../styles/login.css";
+import { API_URL } from "../../config";
 
 function Forgot() {
   const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ function Forgot() {
       setIsSending(true);
       setMessage("");
 
-      const res = await axios.post("http://localhost:5000/api/auth/forgot", { email });
+      const res = await axios.post(`${API_URL}/auth/forgot`, { email });
       navigate("/login/forgot/varification", {
         state: { email, mode: "forgot" },
       });

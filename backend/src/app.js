@@ -39,7 +39,6 @@ const allowedOrigins = [
 ];
 
 if (process.env.FRONTEND_URL) {
-  // Normalize and add the frontend URL
   allowedOrigins.push(process.env.FRONTEND_URL.replace(/\/$/, ""));
 }
 

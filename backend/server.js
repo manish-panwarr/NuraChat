@@ -1,28 +1,22 @@
 import dotenv from "dotenv";
-import http from "http";
-import connectDB from "./src/config/db.js";
-import app from "./src/app.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Load environment variables from absolute path
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, ".env") });
 
-// Connect to database
+import http from "http";
+import connectDB from "./src/config/db.js";
+import app from "./src/app.js";
+
 connectDB();
 
-
-// Create HTTP server from Express app
 const server = http.createServer(app);
 
 import { initSocket } from "./src/sockets/socket.js";
-
-// Initialize Socket.IO
 initSocket(server);
 
-// Start server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, "[IP_ADDRESS]", () => {
   console.log(`Server running on port ${PORT}`);
 });
