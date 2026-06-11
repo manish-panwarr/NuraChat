@@ -111,7 +111,7 @@ app.use("/api/livekit", livekitRoutes);
 app.use("/api/translation", translationRoutes);
 
 // Health check
-app.get("/health", (req, res) => {
+app.get(["/", "/health"], (req, res) => {
   res.send("API WORKING");
 });
 
