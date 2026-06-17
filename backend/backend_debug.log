@@ -6,3 +6,9 @@
 [2026-06-11T02:51:48.581Z] [Socket Connection] Syncing call state for userId=6a2a22c20d1a011085731f50: null
 [2026-06-11T02:52:03.136Z] [Socket disconnect] socket.id=5WcMdROj2ISffjCSAAAB, disconnectedUserId=6a2a22c20d1a011085731f50
 [2026-06-11T02:52:06.233Z] [Socket disconnect] User 6a2a22c20d1a011085731f50 marked offline after 3s heartbeat delay.
+[2026-06-17T09:23:24.296Z] [Socket Connection] socket.id=gvXDJDChC1YRV3liAAAB, userId=6a2a22c20d1a011085731f50
+[2026-06-17T09:23:24.406Z] [Socket Connection] Syncing call state for userId=6a2a22c20d1a011085731f50: null
+[2026-06-17T09:24:54.323Z] [Socket Connection] socket.id=Yst6n0f4tMox8kI5AAAB, userId=6a2a22c20d1a011085731f50
+[2026-06-17T09:24:54.405Z] [Socket Connection] Syncing call state for userId=6a2a22c20d1a011085731f50: null
+[2026-06-17T09:25:05.316Z] [Socket Connection] socket.id=72p8gWWEad3JAJ5WAAAB, userId=6a2a22c20d1a011085731f50
+[2026-06-17T09:25:05.551Z] [Socket Connection] Syncing call state for userId=6a2a22c20d1a011085731f50: null

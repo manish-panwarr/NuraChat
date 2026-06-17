@@ -1,6 +1,6 @@
 import OTP from "../models/otp.model.js";
 import bcrypt from "bcryptjs";
-import { sendOtpEmail } from "./email.js"; // Needs to be checked where this is located
+import { sendOtpEmail } from "./email.js";
 
 export const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -41,17 +41,8 @@ export const sendAndSaveOtp = async (email, type, data = {}) => {
 
     await otpRecord.save();
 
-    // Fire email async — OTP is already saved, so user can still proceed even if email is slow
     sendOtpEmail(email, otp, type === "forgot" ? "Reset Password OTP" : "Verify your account")
-        .catch((err) => {
-            console.error("EMAIL SEND FAILURE");
-            console.error("To:", email, "| Type:", type);
-            console.error("Error:", err.message);
-            console.error("Error code:", err.code);
-            console.error("SMTP response:", err.response);
-            console.error("EMAIL_USER set:", !!process.env.EMAIL_USER);
-            console.error("EMAIL_PASS set:", !!process.env.EMAIL_PASS);
-        });
+        .catch((err) => console.error(`[Email] Failed to send OTP to ${email}:`, err.message));
 
     return { success: true, message: "OTP sent successfully" };
 };

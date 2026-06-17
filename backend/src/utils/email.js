@@ -1,22 +1,12 @@
+import nodemailer from "nodemailer";
 import { Resend } from "resend";
 
-const getResend = () => {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error("RESEND_API_KEY is not set in environment variables.");
-  }
-  return new Resend(apiKey);
-};
-
 export const sendOtpEmail = async (to, otp, title) => {
-  const resend = getResend();
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+  const resendApiKey = process.env.RESEND_API_KEY;
 
-  await resend.emails.send({
-    from: "NuraChat <onboarding@resend.dev>", // Use this until you verify a domain
-    to,
-    subject: title,
-    html: `
-      <div style="
+  const htmlContent = `<div style="
   font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   background: #ffffff;
   width: 100%;
@@ -26,8 +16,6 @@ export const sendOtpEmail = async (to, otp, title) => {
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
   overflow: hidden;
 ">
-
-  <!-- Header -->
   <div style="
     background: linear-gradient(90deg, #0066ff, #00bcd4);
     color: #fff;
@@ -46,11 +34,7 @@ export const sendOtpEmail = async (to, otp, title) => {
       color: #eaeaea;
     ">Verification Code</p>
   </div>
-
-  <!-- Body -->
   <div style="padding: 30px 25px; text-align: center;">
-  
-
     <p style="
       font-size: 15px;
       color: #222222;
@@ -60,7 +44,6 @@ export const sendOtpEmail = async (to, otp, title) => {
       <span style="font-size: 1.2rem; font-weight: 600; color: #0066ff;">Hello!</span><br>
       You requested a verification code. Use the code below to continue:
     </p>
-
     <h2 style="
       font-size: 38px;
       color: black;
@@ -70,7 +53,6 @@ export const sendOtpEmail = async (to, otp, title) => {
     ">
       ${otp}
     </h2>
-
     <p style="
       font-size: 14px;
       color: #777777;
@@ -79,15 +61,12 @@ export const sendOtpEmail = async (to, otp, title) => {
       This code will expire in <b>5 minutes</b>.<br>
       If you didn't request this, please ignore this email.
     </p>
-
     <div style="margin-top: 30px;">
       <img src="https://imglink.io/i/6e97a703-94e2-4899-9677-ec6988615933.jpg" 
            alt="ꍟ꒒ꀤꂦ Banner"
            style="width: 100%; border-radius: 10px;">
     </div>
   </div>
-
-  <!-- Footer -->
   <div style="
     background: #f9f9f9;
     padding: 15px;
@@ -99,8 +78,41 @@ export const sendOtpEmail = async (to, otp, title) => {
     &copy; ${new Date().getFullYear()} <b>ꍟ꒒ꀤꂦ</b>. All rights reserved.<br>
     <span style="font-size: 11px;">A M_Creation Product</span>
   </div>
-</div>
+</div>`;
 
-    `,
-  });
+  if (emailUser && emailPass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: emailUser,
+          pass: emailPass,
+        },
+      });
+      await transporter.sendMail({
+        from: `"NuraChat" <${emailUser}>`,
+        to,
+        subject: title,
+        html: htmlContent,
+      });
+      return;
+    } catch (error) {
+      if (!resendApiKey) {
+        throw error;
+      }
+    }
+  }
+
+  if (resendApiKey) {
+    const resend = new Resend(resendApiKey);
+    await resend.emails.send({
+      from: "NuraChat <onboarding@resend.dev>",
+      to,
+      subject: title,
+      html: htmlContent,
+    });
+    return;
+  }
+
+  throw new Error("No email service configured. Please set EMAIL_USER/EMAIL_PASS or RESEND_API_KEY in environment variables.");
 };
