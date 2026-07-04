@@ -41,10 +41,15 @@ export const sendAndSaveOtp = async (email, type, data = {}) => {
 
     await otpRecord.save();
 
-    sendOtpEmail(email, otp, type === "forgot" ? "Reset Password OTP" : "Verify your account")
-        .catch((err) => console.error(`[Email] Failed to send OTP to ${email}:`, err.message));
-
-    return { success: true, message: "OTP sent successfully" };
+    try {
+        await sendOtpEmail(email, otp, type === "forgot" ? "Reset Password OTP" : "Verify your account");
+        return { success: true, message: "OTP sent successfully" };
+    } catch (err) {
+        console.error(`[Email] Failed to send OTP to ${email}:`, err.message);
+        // Clean up the saved OTP record so user is not rate-limited on retry
+        await OTP.deleteOne({ _id: otpRecord._id });
+        return { success: false, message: `Failed to send email: ${err.message}` };
+    }
 };
 
 // Verifies OTP

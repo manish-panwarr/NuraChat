@@ -2,9 +2,9 @@ import nodemailer from "nodemailer";
 import { Resend } from "resend";
 
 export const sendOtpEmail = async (to, otp, title) => {
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
-  const resendApiKey = process.env.RESEND_API_KEY;
+  const emailUser = process.env.EMAIL_USER?.trim();
+  const emailPass = process.env.EMAIL_PASS?.trim();
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
 
   const htmlContent = `<div style="
   font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
@@ -89,29 +89,42 @@ export const sendOtpEmail = async (to, otp, title) => {
           pass: emailPass,
         },
       });
-      await transporter.sendMail({
+      const info = await transporter.sendMail({
         from: `"NuraChat" <${emailUser}>`,
         to,
         subject: title,
         html: htmlContent,
       });
+      console.log(`[Email] Gmail OTP email sent successfully to ${to}. MessageID: ${info.messageId}`);
       return;
     } catch (error) {
+      console.error(`[Email] Gmail SMTP sending failed to ${to}:`, error.message);
       if (!resendApiKey) {
-        throw error;
+        throw new Error(`Gmail SMTP failed: ${error.message}`);
       }
+      console.log(`[Email] Falling back to Resend API...`);
     }
   }
 
   if (resendApiKey) {
-    const resend = new Resend(resendApiKey);
-    await resend.emails.send({
-      from: "NuraChat <onboarding@resend.dev>",
-      to,
-      subject: title,
-      html: htmlContent,
-    });
-    return;
+    try {
+      const resend = new Resend(resendApiKey);
+      const response = await resend.emails.send({
+        from: "NuraChat <onboarding@resend.dev>",
+        to,
+        subject: title,
+        html: htmlContent,
+      });
+      if (response.error) {
+        console.error(`[Email] Resend API failed for ${to}:`, response.error);
+        throw new Error(`Resend API failed: ${response.error.message || JSON.stringify(response.error)}`);
+      }
+      console.log(`[Email] Resend OTP email sent successfully to ${to}. ID: ${response.data?.id}`);
+      return;
+    } catch (error) {
+      console.error(`[Email] Resend error caught:`, error.message);
+      throw error;
+    }
   }
 
   throw new Error("No email service configured. Please set EMAIL_USER/EMAIL_PASS or RESEND_API_KEY in environment variables.");

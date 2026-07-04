@@ -12,3 +12,21 @@
 [2026-06-17T09:24:54.405Z] [Socket Connection] Syncing call state for userId=6a2a22c20d1a011085731f50: null
 [2026-06-17T09:25:05.316Z] [Socket Connection] socket.id=72p8gWWEad3JAJ5WAAAB, userId=6a2a22c20d1a011085731f50
 [2026-06-17T09:25:05.551Z] [Socket Connection] Syncing call state for userId=6a2a22c20d1a011085731f50: null
+[2026-07-04T05:31:23.179Z] [Socket Connection] socket.id=d_YFbyEOE85DmYrjAAAB, userId=6a2a22c20d1a011085731f50
+[2026-07-04T05:31:23.282Z] [Socket Connection] Syncing call state for userId=6a2a22c20d1a011085731f50: null
+[2026-07-04T05:31:23.801Z] [Socket disconnect] socket.id=d_YFbyEOE85DmYrjAAAB, disconnectedUserId=6a2a22c20d1a011085731f50
+[2026-07-04T05:31:26.853Z] [Socket disconnect] User 6a2a22c20d1a011085731f50 marked offline after 3s heartbeat delay.
+[2026-07-04T05:35:31.900Z] [Socket Connection] socket.id=u0D13cYgOIsbQYv_AAAD, userId=69cb7bf71f0e4de3d6312ed4
+[2026-07-04T05:35:31.971Z] [Socket Connection] Syncing call state for userId=69cb7bf71f0e4de3d6312ed4: null
+[2026-07-04T05:35:45.053Z] [Socket disconnect] socket.id=u0D13cYgOIsbQYv_AAAD, disconnectedUserId=69cb7bf71f0e4de3d6312ed4
+[2026-07-04T05:35:46.671Z] [Socket Connection] socket.id=ZIdToBujlFlzPVobAAAF, userId=69cb7bf71f0e4de3d6312ed4
+[2026-07-04T05:35:46.681Z] [Socket Connection] Reconnect detected. Cancelled offline timeout for userId=69cb7bf71f0e4de3d6312ed4
+[2026-07-04T05:35:46.685Z] [Socket Connection] Syncing call state for userId=69cb7bf71f0e4de3d6312ed4: null
+[2026-07-04T05:37:30.828Z] [Socket disconnect] socket.id=ZIdToBujlFlzPVobAAAF, disconnectedUserId=69cb7bf71f0e4de3d6312ed4
+[2026-07-04T05:37:33.939Z] [Socket disconnect] User 69cb7bf71f0e4de3d6312ed4 marked offline after 3s heartbeat delay.
+[2026-07-04T05:37:52.600Z] [Socket Connection] socket.id=MjbYryrDDgi22YjGAAAH, userId=6a2a22c20d1a011085731f50
+[2026-07-04T05:37:52.679Z] [Socket Connection] Syncing call state for userId=6a2a22c20d1a011085731f50: null
+[2026-07-04T05:41:54.937Z] [Socket Connection] socket.id=IC0vg7AZU7vv0Vm4AAAJ, userId=69cb7bf71f0e4de3d6312ed4
+[2026-07-04T05:41:54.991Z] [Socket Connection] Syncing call state for userId=69cb7bf71f0e4de3d6312ed4: null
+[2026-07-04T05:42:01.845Z] [Socket disconnect] socket.id=IC0vg7AZU7vv0Vm4AAAJ, disconnectedUserId=69cb7bf71f0e4de3d6312ed4
+[2026-07-04T05:42:04.912Z] [Socket disconnect] User 69cb7bf71f0e4de3d6312ed4 marked offline after 3s heartbeat delay.
