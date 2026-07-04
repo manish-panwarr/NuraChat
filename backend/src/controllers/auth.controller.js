@@ -45,7 +45,8 @@ export const registerInit = async (req, res) => {
   const result = await sendAndSaveOtp(email, "register", { firstName, lastName, password });
 
   if (!result.success) {
-    return res.status(429).json(result);
+    const status = result.retryAfter !== undefined ? 429 : 500;
+    return res.status(status).json(result);
   }
 
   res.json({ message: "OTP sent" });
@@ -110,7 +111,8 @@ export const sendForgotOtp = async (req, res) => {
   const result = await sendAndSaveOtp(email, "forgot");
 
   if (!result.success) {
-    return res.status(429).json({ ...result, next: "reset-password" });
+    const status = result.retryAfter !== undefined ? 429 : 500;
+    return res.status(status).json({ ...result, next: "reset-password" });
   }
 
   res.json({ message: "OTP sent" });

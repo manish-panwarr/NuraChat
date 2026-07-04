@@ -1,12 +1,6 @@
-import nodemailer from "nodemailer";
 import { Resend } from "resend";
 
-export const sendOtpEmail = async (to, otp, title) => {
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
-  const resendApiKey = process.env.RESEND_API_KEY;
-
-  const htmlContent = `<div style="
+const buildHtml = (otp) => `<div style="
   font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   background: #ffffff;
   width: 100%;
@@ -27,7 +21,7 @@ export const sendOtpEmail = async (to, otp, title) => {
       font-size: 34px;
       font-weight: 700;
       letter-spacing: 1px;
-    ">ꍟ꒒ꀤꂦ</h1>
+    ">NuraChat</h1>
     <p style="
       margin-top: 6px;
       font-size: 16px;
@@ -61,11 +55,6 @@ export const sendOtpEmail = async (to, otp, title) => {
       This code will expire in <b>5 minutes</b>.<br>
       If you didn't request this, please ignore this email.
     </p>
-    <div style="margin-top: 30px;">
-      <img src="https://imglink.io/i/6e97a703-94e2-4899-9677-ec6988615933.jpg" 
-           alt="ꍟ꒒ꀤꂦ Banner"
-           style="width: 100%; border-radius: 10px;">
-    </div>
   </div>
   <div style="
     background: #f9f9f9;
@@ -75,44 +64,25 @@ export const sendOtpEmail = async (to, otp, title) => {
     color: #777777;
     border-top: 1px solid #eee;
   ">
-    &copy; ${new Date().getFullYear()} <b>ꍟ꒒ꀤꂦ</b>. All rights reserved.<br>
+    &copy; ${new Date().getFullYear()} <b>NuraChat</b>. All rights reserved.<br>
     <span style="font-size: 11px;">A M_Creation Product</span>
   </div>
 </div>`;
 
-  if (emailUser && emailPass) {
-    try {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: emailUser,
-          pass: emailPass,
-        },
-      });
-      await transporter.sendMail({
-        from: `"NuraChat" <${emailUser}>`,
-        to,
-        subject: title,
-        html: htmlContent,
-      });
-      return;
-    } catch (error) {
-      if (!resendApiKey) {
-        throw error;
-      }
-    }
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export const sendOtpEmail = async (to, otp, title) => {
+  const { data, error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM,
+    to: [to],
+    subject: title,
+    html: buildHtml(otp),
+  });
+
+  if (error) {
+    console.error("[Email] Resend error:", error);
+    throw new Error("Failed to send email");
   }
 
-  if (resendApiKey) {
-    const resend = new Resend(resendApiKey);
-    await resend.emails.send({
-      from: "NuraChat <onboarding@resend.dev>",
-      to,
-      subject: title,
-      html: htmlContent,
-    });
-    return;
-  }
-
-  throw new Error("No email service configured. Please set EMAIL_USER/EMAIL_PASS or RESEND_API_KEY in environment variables.");
+  console.log(`[Email] Sent via Resend id=${data?.id} to=${to}`);
 };

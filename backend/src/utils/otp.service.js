@@ -41,8 +41,24 @@ export const sendAndSaveOtp = async (email, type, data = {}) => {
 
     await otpRecord.save();
 
-    sendOtpEmail(email, otp, type === "forgot" ? "Reset Password OTP" : "Verify your account")
-        .catch((err) => console.error(`[Email] Failed to send OTP to ${email}:`, err.message));
+    // Await the email — if it fails, clean up the stored OTP so the user
+    // is not left in a state where the OTP exists but was never delivered.
+    try {
+        await sendOtpEmail(
+            email,
+            otp,
+            type === "forgot" ? "Reset Password OTP" : "Verify your account"
+        );
+        console.log(`[Email] OTP sent successfully to ${email} (type=${type})`);
+    } catch (err) {
+        console.error(`[Email] Failed to send OTP to ${email} (type=${type}):`, err.message);
+        // Delete the OTP record — user cannot verify what they never received
+        await OTP.deleteOne({ _id: otpRecord._id });
+        return {
+            success: false,
+            message: "Failed to send OTP email. Please try again later.",
+        };
+    }
 
     return { success: true, message: "OTP sent successfully" };
 };

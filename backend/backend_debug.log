@@ -32,3 +32,5 @@
 [2026-07-04T05:42:04.912Z] [Socket disconnect] User 69cb7bf71f0e4de3d6312ed4 marked offline after 3s heartbeat delay.
 [2026-07-04T05:47:37.693Z] [Socket disconnect] socket.id=MjbYryrDDgi22YjGAAAH, disconnectedUserId=6a2a22c20d1a011085731f50
 [2026-07-04T05:47:40.768Z] [Socket disconnect] User 6a2a22c20d1a011085731f50 marked offline after 3s heartbeat delay.
+[2026-07-04T06:28:22.389Z] [Socket Connection] socket.id=XVUm7xSD8N7xQ3sqAAAB, userId=6a2adb076db97962caabc26e
+[2026-07-04T06:28:22.458Z] [Socket Connection] Syncing call state for userId=6a2adb076db97962caabc26e: null
