@@ -5,7 +5,7 @@ NuraChat is a production-grade real-time communication platform that solves the 
 - WebRTC audio/video calling is powered by LiveKit with a 15-second socket reconnect grace period and sessionStorage state recovery.
 - A browser-based call recorder mixes screen capture + microphone streams locally using the Web Audio API — no server-side media processing.
 
-##LIVE : https://nura-chat-three.vercel.app/
+#LIVE : https://nura-chat-three.vercel.app/
 
 <img width="1918" height="923" alt="image" src="https://github.com/user-attachments/assets/9bfc70c8-b23a-4a25-94aa-d076f3f2c149" />
 <img width="1917" height="925" alt="Screenshot 2026-06-08 102942" src="https://github.com/user-attachments/assets/4f142976-a584-4c51-9dbf-71d9fa06d686" />
