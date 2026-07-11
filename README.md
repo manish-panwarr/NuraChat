@@ -47,6 +47,10 @@ NuraChat is a production-grade real-time communication platform that solves the 
 - **$0** server-side media processing (client-side recorder)
 
 
+## Backend 
+<img width="951" height="1653" alt="ChatGPT Image Jul 11, 2026, 04_51_29 PM" src="https://github.com/user-attachments/assets/5a3aa896-a9e1-48de-8f1b-41cb1b258efd" />
+
+
 ## Architecture
 
 ```mermaid
